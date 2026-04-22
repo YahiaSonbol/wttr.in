@@ -109,12 +109,13 @@ def _geolocator(location):
     """
 
     try:
-        if random.random() < 0:
-            geo = requests.get("%s/%s" % (GEOLOCATOR_SERVICE, location)).text
-        else:
-            geo = requests.get(
-                "http://127.0.0.1:8085/:geo-location?location=%s" % location
-            ).text
+        # if random.random() < 0:
+        #     geo = requests.get("%s/%s" % (GEOLOCATOR_SERVICE, location)).text
+        # else:
+        #     geo = requests.get(
+        #         "http://127.0.0.1:8085/:geo-location?location=%s" % location
+        #     ).text
+        geo = requests.get("%s/%s" % (GEOLOCATOR_SERVICE, location)).text
     except requests.exceptions.ConnectionError as exception:
         print("ERROR: %s" % exception)
         return None
@@ -166,10 +167,13 @@ def _ipcache(ip_addr):
     """
 
     ## Use Geo IP service when available
-    r = requests.get("http://127.0.0.1:8085/:geo-ip-get?ip=%s" % ip_addr)
-    if r.status_code == 200 and ";" in r.text:
-        _, country, region, city, *_ = r.text.split(";")
-        return city, region, country
+    try:
+        r = requests.get("http://127.0.0.1:8085/:geo-ip-get?ip=%s" % ip_addr, timeout=1)
+        if r.status_code == 200 and ";" in r.text:
+            _, country, region, city, *_ = r.text.split(";")
+            return city, region, country
+    except (requests.exceptions.RequestException, ConnectionError):
+        pass
 
     return None
 

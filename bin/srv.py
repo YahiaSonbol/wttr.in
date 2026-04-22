@@ -3,6 +3,7 @@
 
 from gevent.pywsgi import WSGIServer
 from gevent.monkey import patch_all
+import os
 
 patch_all()
 
@@ -15,7 +16,7 @@ from flask import Flask, request, send_from_directory, send_file
 
 APP = Flask(__name__)
 
-MYDIR = os.path.abspath(os.path.dirname(os.path.dirname("__file__")))
+MYDIR = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 sys.path.append("%s/lib/" % MYDIR)
 
 import wttr_srv

@@ -1,4 +1,4 @@
-ve/
+venv/
 share/static/fonts/
 *.pyc
 data/

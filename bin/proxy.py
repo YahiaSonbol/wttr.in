@@ -37,7 +37,7 @@ from flask import Flask, request
 APP = Flask(__name__)
 
 
-MYDIR = os.path.abspath(os.path.dirname(os.path.dirname("__file__")))
+MYDIR = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 sys.path.append("%s/lib/" % MYDIR)
 
 import proxy_log

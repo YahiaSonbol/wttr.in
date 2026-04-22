@@ -17,7 +17,7 @@ import logging
 import os
 import re
 
-MYDIR = os.path.abspath(os.path.dirname(os.path.dirname("__file__")))
+MYDIR = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 
 if "WTTR_GEOLITE" in os.environ:
     GEOLITE = os.environ["WTTR_GEOLITE"]
@@ -27,8 +27,8 @@ else:
 WEGO = os.environ.get("WTTR_WEGO", "/home/igor/go/bin/we-lang")
 PYPHOON = "/home/igor/src/pyphoon/ve/bin/pyphoon-lolcat" # "pyphoon-lolcat"
 
-_DATADIR = "/wttr.in"
-_LOGDIR = "/wttr.in/log"
+_DATADIR = os.path.join(MYDIR, "cache")
+_LOGDIR = os.path.join(MYDIR, "log")
 
 IP2LCACHE = os.path.join(_DATADIR, "cache/ip2l/")
 PNG_CACHE = os.path.join(_DATADIR, "cache/png")

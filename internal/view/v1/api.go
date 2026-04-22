@@ -41,8 +41,8 @@ type weather struct {
 	Astronomy []astro
 	Date      string
 	Hourly    []cond
-	MaxtempC  int `json:"maxtempC,string"`
-	MintempC  int `json:"mintempC,string"`
+	MaxtempC  float32 `json:"maxtempC,string"`
+	MintempC  float32 `json:"mintempC,string"`
 }
 
 type loc struct {

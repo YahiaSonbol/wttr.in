@@ -14,7 +14,7 @@ func slotTimes() []int {
 //nolint:funlen,gocognit,cyclop
 func (g *global) printDay(w weather) ([]string, error) {
 	var (
-		ret      = []string{}
+		ret      = make([]string, 5)
 		dateName string
 		names    string
 	)
@@ -74,6 +74,7 @@ func (g *global) printDay(w weather) ([]string, error) {
 		month := lctime.Strftime("%b", d)
 		dateName = reverse(month) + " " + day + " " + reverse(dow)
 	} else {
+		var date_format string
 		switch g.config.Lang {
 		case "ko":
 			date_format = "%b %d일 %a"

@@ -23,7 +23,7 @@ from flask import (
 
 app = Flask(__name__)
 
-MYDIR = os.path.abspath(os.path.dirname("__file__"))
+MYDIR = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 sys.path.append(os.path.join(MYDIR, "lib"))
 
 CACHEDIR = os.path.join(MYDIR, "cache")

@@ -17,7 +17,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/mattn/go-colorable"
 	"github.com/mattn/go-runewidth"
 )
 
@@ -137,8 +136,7 @@ func Cmd() error {
 			fmt.Printf("%s %s\n\n", caption, locationName)
 		}
 	}
-	stdout := colorable.NewColorableStdout()
-
+	stdout := os.Stdout
 	if r.Data.Cur == nil || len(r.Data.Cur) < 1 {
 		log.Fatal("No weather data available.")
 	}

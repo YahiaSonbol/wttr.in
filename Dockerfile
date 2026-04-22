@@ -1,16 +1,14 @@
 # Build stage
-FROM golang:1-alpine as builder
+FROM golang:1-alpine AS builder
 
 WORKDIR /app
 
-COPY ./share/we-lang/ /app
+COPY . /app
 
-RUN apk add --no-cache git
+RUN apk add --no-cache git build-base
 
-RUN go get -u github.com/mattn/go-colorable && \
-    go get -u github.com/klauspost/lctime && \
-    go get -u github.com/mattn/go-runewidth && \
-    cd /app && CGO_ENABLED=0 go build .
+RUN cd /app && CGO_ENABLED=1 CGO_CFLAGS="-D_LARGEFILE64_SOURCE" go build -o wttr.in .
+
 
 # Application stage
 FROM alpine:3.21.1
@@ -19,7 +17,7 @@ WORKDIR /app
 
 COPY ./requirements.txt /app
 
-ENV LLVM_CONFIG=/usr/bin/llvm11-config
+ENV LLVM_CONFIG=/usr/bin/llvm15-config
 
 RUN apk add --no-cache --virtual .build \
     autoconf \
@@ -27,7 +25,7 @@ RUN apk add --no-cache --virtual .build \
     g++ \
     gcc \
     jpeg-dev \
-    llvm11-dev\
+    llvm15-dev\
     make \
     zlib-dev \
     && apk add --no-cache \
@@ -38,18 +36,24 @@ RUN apk add --no-cache --virtual .build \
     py3-gevent \
     zlib \
     jpeg \
-    llvm11 \
+    llvm15 \
     libtool \
     supervisor \
     py3-numpy-dev \
+    bash \
     python3-dev && \
     mkdir -p /app/cache && \
+    mkdir -p /app/log && \
     mkdir -p /var/log/supervisor && \
     mkdir -p /etc/supervisor/conf.d && \
     chmod -R o+rw /var/log/supervisor && \
+    chmod -R o+rw /app/log && \
     chmod -R o+rw /var/run && \
-    pip install -r requirements.txt --no-cache-dir && \
+    pip install -r requirements.txt --no-cache-dir --break-system-packages && \
     apk del --no-cache -r .build
+
+COPY ./GeoLite2-City.mmdb /app/
+COPY ./wwo.key /app/
 
 COPY --from=builder /app/wttr.in /app/bin/wttr.in
 COPY ./bin /app/bin
@@ -62,6 +66,8 @@ ENV WTTR_GEOLITE="/app/GeoLite2-City.mmdb"
 ENV WTTR_WEGO="/app/bin/wttr.in"
 ENV WTTR_LISTEN_HOST="0.0.0.0"
 ENV WTTR_LISTEN_PORT="8002"
+ENV WTTR_WWO_KEY_FILE="/app/wwo.key"
+ENV WTTR_USER_AGENT="wttr.in/1.0 (https://github.com/chubin/wttr.in; igor@chubin.org)"
 
 EXPOSE 8002
 

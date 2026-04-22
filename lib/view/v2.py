@@ -30,7 +30,7 @@ import io
 
 import requests
 import diagram
-import pyjq
+import jq
 import pytz
 import numpy as np
 from astral import LocationInfo
@@ -86,7 +86,7 @@ def jq_query(query, data_parsed):
     Apply `query` to structued data `data_parsed`
     """
 
-    pyjq_data = pyjq.all(query, data_parsed)
+    pyjq_data = jq.compile(query).input_value(data_parsed).all()
     data = list(map(float, pyjq_data))
     return data
 
