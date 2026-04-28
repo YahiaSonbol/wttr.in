@@ -1,1 +1,1 @@
-http://localhost:8002/w
+http://localhost:8002/singapore
