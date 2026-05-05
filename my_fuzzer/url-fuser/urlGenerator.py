@@ -46,9 +46,124 @@ class urlGenerator(Generator):
     def query(self, parent: ParentRule | None = None) -> Rule:
         with UnparserRuleContext(self, 'query', parent) as rule:
             current = rule.current
-            with AlternationContext(rule, 0, urlGenerator._alt_sizes[2], 0, urlGenerator._alt_conds[0]) as alt0:
+            with AlternationContext(rule, 0, urlGenerator._alt_sizes[2], 0, urlGenerator._alt_conds[2]) as alt0:
                 current = rule.current
-                [self.search, self.CITY][alt0()](parent=current)
+                choice0 = alt0()
+                if choice0 == 0:
+                    self.search(parent=current)
+                elif choice0 == 1:
+                    self.CITY(parent=current)
+                elif choice0 == 2:
+                    self.T__3(parent=current)
+                elif choice0 == 3:
+                    self._reserve(2, self.T__3, parent=current)
+                    self._reserve(1, self.T__4, parent=current)
+                    self.CITY(parent=current)
+                elif choice0 == 4:
+                    self._reserve(3, self.T__5, parent=current)
+                    self._reserve(2, self.T__6, parent=current)
+                    self._reserve(1, self.T__7, parent=current)
+                    with AlternationContext(rule, 1, urlGenerator._alt_sizes[3], 0, urlGenerator._alt_conds[3]) as alt1:
+                        current = rule.current
+                        [self.T__8, self.T__9, self.T__10, self.T__11, self.T__12, self.T__13, self.T__14][alt1()](parent=current)
+                    current = rule.current
+                elif choice0 == 5:
+                    self._reserve(2, self.T__2, parent=current)
+                    self._reserve(1, self.T__1, parent=current)
+                    with AlternationContext(rule, 2, urlGenerator._alt_sizes[4], 0, urlGenerator._alt_conds[4]) as alt2:
+                        current = rule.current
+                        [self.T__15, self.T__16, self.T__17, self.T__18][alt2()](parent=current)
+                    current = rule.current
+                elif choice0 == 6:
+                    self._reserve(1, self.CITY, parent=current)
+                    self.T__19(parent=current)
+                elif choice0 == 7:
+                    self._reserve(1, self.T__3, parent=current)
+                    self.T__19(parent=current)
+                elif choice0 == 8:
+                    self._reserve(3, self.T__3, parent=current)
+                    self._reserve(2, self.T__4, parent=current)
+                    self._reserve(1, self.CITY, parent=current)
+                    self.T__19(parent=current)
+                elif choice0 == 9:
+                    self._reserve(3, self.T__5, parent=current)
+                    self._reserve(2, self.T__6, parent=current)
+                    self._reserve(1, self.T__7, parent=current)
+                    self.T__14(parent=current)
+                elif choice0 == 10:
+                    self._reserve(4, self.T__3, parent=current)
+                    self._reserve(3, self.T__5, parent=current)
+                    self._reserve(2, self.T__6, parent=current)
+                    self._reserve(1, self.T__7, parent=current)
+                    with AlternationContext(rule, 3, urlGenerator._alt_sizes[3], 0, urlGenerator._alt_conds[3]) as alt3:
+                        current = rule.current
+                        [self.T__8, self.T__9, self.T__10, self.T__11, self.T__12, self.T__13, self.T__14][alt3()](parent=current)
+                    current = rule.current
+                elif choice0 == 11:
+                    self._reserve(6, self.T__3, parent=current)
+                    self._reserve(5, self.T__4, parent=current)
+                    self._reserve(4, self.CITY, parent=current)
+                    self._reserve(3, self.T__5, parent=current)
+                    self._reserve(2, self.T__6, parent=current)
+                    self._reserve(1, self.T__7, parent=current)
+                    with AlternationContext(rule, 4, urlGenerator._alt_sizes[3], 0, urlGenerator._alt_conds[3]) as alt4:
+                        current = rule.current
+                        [self.T__8, self.T__9, self.T__10, self.T__11, self.T__12, self.T__13, self.T__14][alt4()](parent=current)
+                    current = rule.current
+                elif choice0 == 12:
+                    self._reserve(4, self.T__3, parent=current)
+                    self._reserve(3, self.T__5, parent=current)
+                    self._reserve(2, self.T__20, parent=current)
+                    self._reserve(1, self.T__7, parent=current)
+                    with AlternationContext(rule, 5, urlGenerator._alt_sizes[5], 0, urlGenerator._alt_conds[5]) as alt5:
+                        current = rule.current
+                        [self.T__21, self.T__22, self.T__23, self.T__24, self.T__25, self.T__26, self.T__27, self.T__28, self.T__29, self.T__30, self.T__31, self.T__32][alt5()](parent=current)
+                    current = rule.current
+                elif choice0 == 13:
+                    self._reserve(6, self.T__3, parent=current)
+                    self._reserve(5, self.T__4, parent=current)
+                    self._reserve(4, self.CITY, parent=current)
+                    self._reserve(3, self.T__5, parent=current)
+                    self._reserve(2, self.T__20, parent=current)
+                    self._reserve(1, self.T__7, parent=current)
+                    with AlternationContext(rule, 6, urlGenerator._alt_sizes[5], 0, urlGenerator._alt_conds[5]) as alt6:
+                        current = rule.current
+                        [self.T__21, self.T__22, self.T__23, self.T__24, self.T__25, self.T__26, self.T__27, self.T__28, self.T__29, self.T__30, self.T__31, self.T__32][alt6()](parent=current)
+                    current = rule.current
+                elif choice0 == 14:
+                    self._reserve(8, self.T__3, parent=current)
+                    self._reserve(7, self.T__5, parent=current)
+                    self._reserve(6, self.T__20, parent=current)
+                    self._reserve(5, self.T__7, parent=current)
+                    with AlternationContext(rule, 7, urlGenerator._alt_sizes[5], 4, urlGenerator._alt_conds[5]) as alt7:
+                        current = rule.current
+                        [self.T__21, self.T__22, self.T__23, self.T__24, self.T__25, self.T__26, self.T__27, self.T__28, self.T__29, self.T__30, self.T__31, self.T__32][alt7()](parent=current)
+                    current = rule.current
+                    self._reserve(3, self.T__33, parent=current)
+                    self._reserve(2, self.T__6, parent=current)
+                    self._reserve(1, self.T__7, parent=current)
+                    with AlternationContext(rule, 8, urlGenerator._alt_sizes[3], 0, urlGenerator._alt_conds[3]) as alt8:
+                        current = rule.current
+                        [self.T__8, self.T__9, self.T__10, self.T__11, self.T__12, self.T__13, self.T__14][alt8()](parent=current)
+                    current = rule.current
+                elif choice0 == 15:
+                    self._reserve(10, self.T__3, parent=current)
+                    self._reserve(9, self.T__4, parent=current)
+                    self._reserve(8, self.CITY, parent=current)
+                    self._reserve(7, self.T__5, parent=current)
+                    self._reserve(6, self.T__20, parent=current)
+                    self._reserve(5, self.T__7, parent=current)
+                    with AlternationContext(rule, 9, urlGenerator._alt_sizes[5], 4, urlGenerator._alt_conds[5]) as alt9:
+                        current = rule.current
+                        [self.T__21, self.T__22, self.T__23, self.T__24, self.T__25, self.T__26, self.T__27, self.T__28, self.T__29, self.T__30, self.T__31, self.T__32][alt9()](parent=current)
+                    current = rule.current
+                    self._reserve(3, self.T__33, parent=current)
+                    self._reserve(2, self.T__6, parent=current)
+                    self._reserve(1, self.T__7, parent=current)
+                    with AlternationContext(rule, 10, urlGenerator._alt_sizes[3], 0, urlGenerator._alt_conds[3]) as alt10:
+                        current = rule.current
+                        [self.T__8, self.T__9, self.T__10, self.T__11, self.T__12, self.T__13, self.T__14][alt10()](parent=current)
+                    current = rule.current
             current = rule.current
         return current
 
@@ -60,7 +175,7 @@ class urlGenerator(Generator):
                 while quant0():
                     with QuantifiedContext(rule):
                         current = rule.current
-                        self._reserve(1, self.T__3, parent=current)
+                        self._reserve(1, self.T__33, parent=current)
                         self.searchparameter(parent=current)
             current = rule.current
         return current
@@ -68,23 +183,92 @@ class urlGenerator(Generator):
     def searchparameter(self, parent: ParentRule | None = None) -> Rule:
         with UnparserRuleContext(self, 'searchparameter', parent) as rule:
             current = rule.current
-            self.string(parent=current)
-            with QuantifierContext(rule, 0, 0, 1, urlGenerator._quant_sizes[2], 0) as quant0:
-                while quant0():
-                    with QuantifiedContext(rule):
+            with AlternationContext(rule, 0, urlGenerator._alt_sizes[6], 0, urlGenerator._alt_conds[6]) as alt0:
+                current = rule.current
+                choice0 = alt0()
+                if choice0 == 0:
+                    self.string(parent=current)
+                    with QuantifierContext(rule, 0, 0, 1, urlGenerator._quant_sizes[2], 0) as quant0:
+                        while quant0():
+                            with QuantifiedContext(rule):
+                                current = rule.current
+                                self._reserve(1, self.T__7, parent=current)
+                                with AlternationContext(rule, 1, urlGenerator._alt_sizes[7], 0, urlGenerator._alt_conds[7]) as alt1:
+                                    current = rule.current
+                                    [self.string, self.DIGITS, self.HEX][alt1()](parent=current)
+                                current = rule.current
+                    current = rule.current
+                elif choice0 == 1:
+                    self._reserve(2, self.T__6, parent=current)
+                    self._reserve(1, self.T__7, parent=current)
+                    with AlternationContext(rule, 2, urlGenerator._alt_sizes[3], 0, urlGenerator._alt_conds[3]) as alt2:
                         current = rule.current
-                        self._reserve(1, self.T__4, parent=current)
-                        with AlternationContext(rule, 0, urlGenerator._alt_sizes[3], 0, urlGenerator._alt_conds[2]) as alt0:
-                            current = rule.current
-                            [self.string, self.DIGITS, self.HEX][alt0()](parent=current)
+                        [self.T__8, self.T__9, self.T__10, self.T__11, self.T__12, self.T__13, self.T__14][alt2()](parent=current)
+                    current = rule.current
+                elif choice0 == 2:
+                    self._reserve(2, self.T__20, parent=current)
+                    self._reserve(1, self.T__7, parent=current)
+                    with AlternationContext(rule, 3, urlGenerator._alt_sizes[5], 0, urlGenerator._alt_conds[5]) as alt3:
                         current = rule.current
+                        [self.T__21, self.T__22, self.T__23, self.T__24, self.T__25, self.T__26, self.T__27, self.T__28, self.T__29, self.T__30, self.T__31, self.T__32][alt3()](parent=current)
+                    current = rule.current
+                elif choice0 == 3:
+                    self.T__34(parent=current)
+                elif choice0 == 4:
+                    self.T__35(parent=current)
+                elif choice0 == 5:
+                    self.T__36(parent=current)
+                elif choice0 == 6:
+                    self.T__37(parent=current)
+                elif choice0 == 7:
+                    self.T__38(parent=current)
+                elif choice0 == 8:
+                    self.T__39(parent=current)
+                elif choice0 == 9:
+                    self.T__40(parent=current)
+                elif choice0 == 10:
+                    self.T__41(parent=current)
+                elif choice0 == 11:
+                    self.T__42(parent=current)
+                elif choice0 == 12:
+                    self.T__43(parent=current)
+                elif choice0 == 13:
+                    self.T__44(parent=current)
+                elif choice0 == 14:
+                    self.T__45(parent=current)
+                elif choice0 == 15:
+                    self.T__46(parent=current)
+                elif choice0 == 16:
+                    self.T__47(parent=current)
+                elif choice0 == 17:
+                    self.T__48(parent=current)
+                elif choice0 == 18:
+                    self.T__49(parent=current)
+                elif choice0 == 19:
+                    self.T__50(parent=current)
+                elif choice0 == 20:
+                    self._reserve(2, self.T__20, parent=current)
+                    self._reserve(1, self.T__7, parent=current)
+                    self.STRING(parent=current)
+                elif choice0 == 21:
+                    self._reserve(2, self.T__6, parent=current)
+                    self._reserve(1, self.T__7, parent=current)
+                    self.STRING(parent=current)
+                elif choice0 == 22:
+                    self._reserve(2, self.T__51, parent=current)
+                    self._reserve(1, self.T__7, parent=current)
+                    self.STRING(parent=current)
+                elif choice0 == 23:
+                    self._reserve(2, self.T__52, parent=current)
+                    self._reserve(1, self.T__7, parent=current)
+                    self.STRING(parent=current)
             current = rule.current
         return current
 
     def string(self, parent: ParentRule | None = None) -> Rule:
         with UnparserRuleContext(self, 'string', parent) as rule:
             current = rule.current
-            with AlternationContext(rule, 0, urlGenerator._alt_sizes[4], 0, urlGenerator._alt_conds[0]) as alt0:
+            with AlternationContext(rule, 0, urlGenerator._alt_sizes[8], 0, urlGenerator._alt_conds[0]) as alt0:
                 current = rule.current
                 [self.STRING, self.DIGITS][alt0()](parent=current)
             current = rule.current
@@ -163,7 +347,7 @@ class urlGenerator(Generator):
             current = rule.current
             with AlternationContext(rule, 0, urlGenerator._alt_sizes[1], 0, urlGenerator._alt_conds[1]) as alt0:
                 current = rule.current
-                current.src += ['cairo', 'paris', 'london', 'newyork', 'tokyo', 'moscow', 'beijing', 'delhi', 'sydney', 'rome', 'berlin', 'madrid', 'toronto', 'dubai', 'singapore', 'hongkong', 'seoul', 'bangkok', 'istanbul', 'riyadh'][alt0()]
+                current.src += ['cairo', 'paris', 'london', 'newyork', 'tokyo', 'moscow', 'beijing', 'delhi', 'sydney', 'rome', 'berlin', 'madrid', 'toronto', 'dubai', 'singapore', 'hongkong', 'seoul', 'bangkok', 'istanbul', 'riyadh', 'moon', 'Paris_200x_lang=ru', 'London_200x_lang=en', 'Tokyo_200x_lang=jp', 'NewYork_200x_lang=en', 'Berlin_200x_lang=de', 'moscow_200x_lang=ru', 'beijing_200x_lang=zh', 'delhi_200x_lang=hi', 'sydney_200x_lang=en', 'rome_200x_lang=it', 'madrid_200x_lang=es', 'toronto_200x_lang=en', 'dubai_200x_lang=ar', 'singapore_200x_lang=en', 'hongkong_200x_lang=zh', 'seoul_200x_lang=ko', 'bangkok_200x_lang=th', 'istanbul_200x_lang=tr', 'riyadh_200x_lang=ar'][alt0()]
             current = rule.current
         return current
 
@@ -188,13 +372,301 @@ class urlGenerator(Generator):
     def T__3(self, parent: ParentRule | None = None) -> Rule:
         with UnlexerRuleContext(self, 'T__3', parent, True) as rule:
             current = rule.current
-            current.src += '&'
+            current.src += 'moon'
         return current
 
     def T__4(self, parent: ParentRule | None = None) -> Rule:
         with UnlexerRuleContext(self, 'T__4', parent, True) as rule:
             current = rule.current
+            current.src += '@'
+        return current
+
+    def T__5(self, parent: ParentRule | None = None) -> Rule:
+        with UnlexerRuleContext(self, 'T__5', parent, True) as rule:
+            current = rule.current
+            current.src += '?'
+        return current
+
+    def T__6(self, parent: ParentRule | None = None) -> Rule:
+        with UnlexerRuleContext(self, 'T__6', parent, True) as rule:
+            current = rule.current
+            current.src += 'format'
+        return current
+
+    def T__7(self, parent: ParentRule | None = None) -> Rule:
+        with UnlexerRuleContext(self, 'T__7', parent, True) as rule:
+            current = rule.current
             current.src += '='
+        return current
+
+    def T__8(self, parent: ParentRule | None = None) -> Rule:
+        with UnlexerRuleContext(self, 'T__8', parent, True) as rule:
+            current = rule.current
+            current.src += 'j1'
+        return current
+
+    def T__9(self, parent: ParentRule | None = None) -> Rule:
+        with UnlexerRuleContext(self, 'T__9', parent, True) as rule:
+            current = rule.current
+            current.src += 'j2'
+        return current
+
+    def T__10(self, parent: ParentRule | None = None) -> Rule:
+        with UnlexerRuleContext(self, 'T__10', parent, True) as rule:
+            current = rule.current
+            current.src += 'v2'
+        return current
+
+    def T__11(self, parent: ParentRule | None = None) -> Rule:
+        with UnlexerRuleContext(self, 'T__11', parent, True) as rule:
+            current = rule.current
+            current.src += 'v2n'
+        return current
+
+    def T__12(self, parent: ParentRule | None = None) -> Rule:
+        with UnlexerRuleContext(self, 'T__12', parent, True) as rule:
+            current = rule.current
+            current.src += 'v2d'
+        return current
+
+    def T__13(self, parent: ParentRule | None = None) -> Rule:
+        with UnlexerRuleContext(self, 'T__13', parent, True) as rule:
+            current = rule.current
+            current.src += 'p1'
+        return current
+
+    def T__14(self, parent: ParentRule | None = None) -> Rule:
+        with UnlexerRuleContext(self, 'T__14', parent, True) as rule:
+            current = rule.current
+            current.src += 'png'
+        return current
+
+    def T__15(self, parent: ParentRule | None = None) -> Rule:
+        with UnlexerRuleContext(self, 'T__15', parent, True) as rule:
+            current = rule.current
+            current.src += 'help'
+        return current
+
+    def T__16(self, parent: ParentRule | None = None) -> Rule:
+        with UnlexerRuleContext(self, 'T__16', parent, True) as rule:
+            current = rule.current
+            current.src += 'translation'
+        return current
+
+    def T__17(self, parent: ParentRule | None = None) -> Rule:
+        with UnlexerRuleContext(self, 'T__17', parent, True) as rule:
+            current = rule.current
+            current.src += 'bash.function'
+        return current
+
+    def T__18(self, parent: ParentRule | None = None) -> Rule:
+        with UnlexerRuleContext(self, 'T__18', parent, True) as rule:
+            current = rule.current
+            current.src += 'iterm2'
+        return current
+
+    def T__19(self, parent: ParentRule | None = None) -> Rule:
+        with UnlexerRuleContext(self, 'T__19', parent, True) as rule:
+            current = rule.current
+            current.src += '.png'
+        return current
+
+    def T__20(self, parent: ParentRule | None = None) -> Rule:
+        with UnlexerRuleContext(self, 'T__20', parent, True) as rule:
+            current = rule.current
+            current.src += 'lang'
+        return current
+
+    def T__21(self, parent: ParentRule | None = None) -> Rule:
+        with UnlexerRuleContext(self, 'T__21', parent, True) as rule:
+            current = rule.current
+            current.src += 'en'
+        return current
+
+    def T__22(self, parent: ParentRule | None = None) -> Rule:
+        with UnlexerRuleContext(self, 'T__22', parent, True) as rule:
+            current = rule.current
+            current.src += 'ru'
+        return current
+
+    def T__23(self, parent: ParentRule | None = None) -> Rule:
+        with UnlexerRuleContext(self, 'T__23', parent, True) as rule:
+            current = rule.current
+            current.src += 'de'
+        return current
+
+    def T__24(self, parent: ParentRule | None = None) -> Rule:
+        with UnlexerRuleContext(self, 'T__24', parent, True) as rule:
+            current = rule.current
+            current.src += 'es'
+        return current
+
+    def T__25(self, parent: ParentRule | None = None) -> Rule:
+        with UnlexerRuleContext(self, 'T__25', parent, True) as rule:
+            current = rule.current
+            current.src += 'fr'
+        return current
+
+    def T__26(self, parent: ParentRule | None = None) -> Rule:
+        with UnlexerRuleContext(self, 'T__26', parent, True) as rule:
+            current = rule.current
+            current.src += 'ja'
+        return current
+
+    def T__27(self, parent: ParentRule | None = None) -> Rule:
+        with UnlexerRuleContext(self, 'T__27', parent, True) as rule:
+            current = rule.current
+            current.src += 'zh'
+        return current
+
+    def T__28(self, parent: ParentRule | None = None) -> Rule:
+        with UnlexerRuleContext(self, 'T__28', parent, True) as rule:
+            current = rule.current
+            current.src += 'ko'
+        return current
+
+    def T__29(self, parent: ParentRule | None = None) -> Rule:
+        with UnlexerRuleContext(self, 'T__29', parent, True) as rule:
+            current = rule.current
+            current.src += 'ar'
+        return current
+
+    def T__30(self, parent: ParentRule | None = None) -> Rule:
+        with UnlexerRuleContext(self, 'T__30', parent, True) as rule:
+            current = rule.current
+            current.src += 'th'
+        return current
+
+    def T__31(self, parent: ParentRule | None = None) -> Rule:
+        with UnlexerRuleContext(self, 'T__31', parent, True) as rule:
+            current = rule.current
+            current.src += 'tr'
+        return current
+
+    def T__32(self, parent: ParentRule | None = None) -> Rule:
+        with UnlexerRuleContext(self, 'T__32', parent, True) as rule:
+            current = rule.current
+            current.src += 'hi'
+        return current
+
+    def T__33(self, parent: ParentRule | None = None) -> Rule:
+        with UnlexerRuleContext(self, 'T__33', parent, True) as rule:
+            current = rule.current
+            current.src += '&'
+        return current
+
+    def T__34(self, parent: ParentRule | None = None) -> Rule:
+        with UnlexerRuleContext(self, 'T__34', parent, True) as rule:
+            current = rule.current
+            current.src += 'A'
+        return current
+
+    def T__35(self, parent: ParentRule | None = None) -> Rule:
+        with UnlexerRuleContext(self, 'T__35', parent, True) as rule:
+            current = rule.current
+            current.src += 'd'
+        return current
+
+    def T__36(self, parent: ParentRule | None = None) -> Rule:
+        with UnlexerRuleContext(self, 'T__36', parent, True) as rule:
+            current = rule.current
+            current.src += 'n'
+        return current
+
+    def T__37(self, parent: ParentRule | None = None) -> Rule:
+        with UnlexerRuleContext(self, 'T__37', parent, True) as rule:
+            current = rule.current
+            current.src += 'm'
+        return current
+
+    def T__38(self, parent: ParentRule | None = None) -> Rule:
+        with UnlexerRuleContext(self, 'T__38', parent, True) as rule:
+            current = rule.current
+            current.src += 'M'
+        return current
+
+    def T__39(self, parent: ParentRule | None = None) -> Rule:
+        with UnlexerRuleContext(self, 'T__39', parent, True) as rule:
+            current = rule.current
+            current.src += 'u'
+        return current
+
+    def T__40(self, parent: ParentRule | None = None) -> Rule:
+        with UnlexerRuleContext(self, 'T__40', parent, True) as rule:
+            current = rule.current
+            current.src += 'I'
+        return current
+
+    def T__41(self, parent: ParentRule | None = None) -> Rule:
+        with UnlexerRuleContext(self, 'T__41', parent, True) as rule:
+            current = rule.current
+            current.src += 't'
+        return current
+
+    def T__42(self, parent: ParentRule | None = None) -> Rule:
+        with UnlexerRuleContext(self, 'T__42', parent, True) as rule:
+            current = rule.current
+            current.src += 'T'
+        return current
+
+    def T__43(self, parent: ParentRule | None = None) -> Rule:
+        with UnlexerRuleContext(self, 'T__43', parent, True) as rule:
+            current = rule.current
+            current.src += 'p'
+        return current
+
+    def T__44(self, parent: ParentRule | None = None) -> Rule:
+        with UnlexerRuleContext(self, 'T__44', parent, True) as rule:
+            current = rule.current
+            current.src += 'q'
+        return current
+
+    def T__45(self, parent: ParentRule | None = None) -> Rule:
+        with UnlexerRuleContext(self, 'T__45', parent, True) as rule:
+            current = rule.current
+            current.src += 'Q'
+        return current
+
+    def T__46(self, parent: ParentRule | None = None) -> Rule:
+        with UnlexerRuleContext(self, 'T__46', parent, True) as rule:
+            current = rule.current
+            current.src += 'F'
+        return current
+
+    def T__47(self, parent: ParentRule | None = None) -> Rule:
+        with UnlexerRuleContext(self, 'T__47', parent, True) as rule:
+            current = rule.current
+            current.src += '0'
+        return current
+
+    def T__48(self, parent: ParentRule | None = None) -> Rule:
+        with UnlexerRuleContext(self, 'T__48', parent, True) as rule:
+            current = rule.current
+            current.src += '1'
+        return current
+
+    def T__49(self, parent: ParentRule | None = None) -> Rule:
+        with UnlexerRuleContext(self, 'T__49', parent, True) as rule:
+            current = rule.current
+            current.src += '2'
+        return current
+
+    def T__50(self, parent: ParentRule | None = None) -> Rule:
+        with UnlexerRuleContext(self, 'T__50', parent, True) as rule:
+            current = rule.current
+            current.src += '3'
+        return current
+
+    def T__51(self, parent: ParentRule | None = None) -> Rule:
+        with UnlexerRuleContext(self, 'T__51', parent, True) as rule:
+            current = rule.current
+            current.src += 'location'
+        return current
+
+    def T__52(self, parent: ParentRule | None = None) -> Rule:
+        with UnlexerRuleContext(self, 'T__52', parent, True) as rule:
+            current = rule.current
+            current.src += 'city'
         return current
 
 
@@ -207,8 +679,8 @@ class urlGenerator(Generator):
         'host': RuleSize(2, 1),
         'port': RuleSize(2, 1),
         'query': RuleSize(2, 1),
-        'search': RuleSize(4, 1),
-        'searchparameter': RuleSize(3, 1),
+        'search': RuleSize(3, 1),
+        'searchparameter': RuleSize(2, 1),
         'string': RuleSize(2, 1),
         'DIGITS': RuleSize(1, 1),
         'HEX': RuleSize(1, 1),
@@ -222,25 +694,82 @@ class urlGenerator(Generator):
         'T__2': RuleSize(1, 1),
         'T__3': RuleSize(1, 1),
         'T__4': RuleSize(1, 1),
+        'T__5': RuleSize(1, 1),
+        'T__6': RuleSize(1, 1),
+        'T__7': RuleSize(1, 1),
+        'T__8': RuleSize(1, 1),
+        'T__9': RuleSize(1, 1),
+        'T__10': RuleSize(1, 1),
+        'T__11': RuleSize(1, 1),
+        'T__12': RuleSize(1, 1),
+        'T__13': RuleSize(1, 1),
+        'T__14': RuleSize(1, 1),
+        'T__15': RuleSize(1, 1),
+        'T__16': RuleSize(1, 1),
+        'T__17': RuleSize(1, 1),
+        'T__18': RuleSize(1, 1),
+        'T__19': RuleSize(1, 1),
+        'T__20': RuleSize(1, 1),
+        'T__21': RuleSize(1, 1),
+        'T__22': RuleSize(1, 1),
+        'T__23': RuleSize(1, 1),
+        'T__24': RuleSize(1, 1),
+        'T__25': RuleSize(1, 1),
+        'T__26': RuleSize(1, 1),
+        'T__27': RuleSize(1, 1),
+        'T__28': RuleSize(1, 1),
+        'T__29': RuleSize(1, 1),
+        'T__30': RuleSize(1, 1),
+        'T__31': RuleSize(1, 1),
+        'T__32': RuleSize(1, 1),
+        'T__33': RuleSize(1, 1),
+        'T__34': RuleSize(1, 1),
+        'T__35': RuleSize(1, 1),
+        'T__36': RuleSize(1, 1),
+        'T__37': RuleSize(1, 1),
+        'T__38': RuleSize(1, 1),
+        'T__39': RuleSize(1, 1),
+        'T__40': RuleSize(1, 1),
+        'T__41': RuleSize(1, 1),
+        'T__42': RuleSize(1, 1),
+        'T__43': RuleSize(1, 1),
+        'T__44': RuleSize(1, 1),
+        'T__45': RuleSize(1, 1),
+        'T__46': RuleSize(1, 1),
+        'T__47': RuleSize(1, 1),
+        'T__48': RuleSize(1, 1),
+        'T__49': RuleSize(1, 1),
+        'T__50': RuleSize(1, 1),
+        'T__51': RuleSize(1, 1),
+        'T__52': RuleSize(1, 1),
     }
 
     _alt_sizes: ClassVar[tuple[tuple[RuleSize, ...], ...]] = (
         (RuleSize(0, 0), RuleSize(1, 1)),  # 0
-        (RuleSize(0, 0), RuleSize(0, 0), RuleSize(0, 0), RuleSize(0, 0), RuleSize(0, 0), RuleSize(0, 0), RuleSize(0, 0), RuleSize(0, 0), RuleSize(0, 0), RuleSize(0, 0), RuleSize(0, 0), RuleSize(0, 0), RuleSize(0, 0), RuleSize(0, 0), RuleSize(0, 0), RuleSize(0, 0), RuleSize(0, 0), RuleSize(0, 0), RuleSize(0, 0), RuleSize(0, 0)),  # 1
-        (RuleSize(4, 1), RuleSize(1, 1)),  # 2
-        (RuleSize(2, 1), RuleSize(1, 1), RuleSize(1, 1)),  # 3
-        (RuleSize(1, 1), RuleSize(1, 1)),  # 4
+        (RuleSize(0, 0), RuleSize(0, 0), RuleSize(0, 0), RuleSize(0, 0), RuleSize(0, 0), RuleSize(0, 0), RuleSize(0, 0), RuleSize(0, 0), RuleSize(0, 0), RuleSize(0, 0), RuleSize(0, 0), RuleSize(0, 0), RuleSize(0, 0), RuleSize(0, 0), RuleSize(0, 0), RuleSize(0, 0), RuleSize(0, 0), RuleSize(0, 0), RuleSize(0, 0), RuleSize(0, 0), RuleSize(0, 0), RuleSize(0, 0), RuleSize(0, 0), RuleSize(0, 0), RuleSize(0, 0), RuleSize(0, 0), RuleSize(0, 0), RuleSize(0, 0), RuleSize(0, 0), RuleSize(0, 0), RuleSize(0, 0), RuleSize(0, 0), RuleSize(0, 0), RuleSize(0, 0), RuleSize(0, 0), RuleSize(0, 0), RuleSize(0, 0), RuleSize(0, 0), RuleSize(0, 0), RuleSize(0, 0)),  # 1
+        (RuleSize(3, 1), RuleSize(1, 1), RuleSize(1, 1), RuleSize(1, 3), RuleSize(1, 4), RuleSize(1, 3), RuleSize(1, 2), RuleSize(1, 2), RuleSize(1, 4), RuleSize(1, 4), RuleSize(1, 5), RuleSize(1, 7), RuleSize(1, 5), RuleSize(1, 7), RuleSize(1, 9), RuleSize(1, 11)),  # 2
+        (RuleSize(1, 1), RuleSize(1, 1), RuleSize(1, 1), RuleSize(1, 1), RuleSize(1, 1), RuleSize(1, 1), RuleSize(1, 1)),  # 3
+        (RuleSize(1, 1), RuleSize(1, 1), RuleSize(1, 1), RuleSize(1, 1)),  # 4
+        (RuleSize(1, 1), RuleSize(1, 1), RuleSize(1, 1), RuleSize(1, 1), RuleSize(1, 1), RuleSize(1, 1), RuleSize(1, 1), RuleSize(1, 1), RuleSize(1, 1), RuleSize(1, 1), RuleSize(1, 1), RuleSize(1, 1)),  # 5
+        (RuleSize(2, 1), RuleSize(1, 3), RuleSize(1, 3), RuleSize(1, 1), RuleSize(1, 1), RuleSize(1, 1), RuleSize(1, 1), RuleSize(1, 1), RuleSize(1, 1), RuleSize(1, 1), RuleSize(1, 1), RuleSize(1, 1), RuleSize(1, 1), RuleSize(1, 1), RuleSize(1, 1), RuleSize(1, 1), RuleSize(1, 1), RuleSize(1, 1), RuleSize(1, 1), RuleSize(1, 1), RuleSize(1, 3), RuleSize(1, 3), RuleSize(1, 3), RuleSize(1, 3)),  # 6
+        (RuleSize(2, 1), RuleSize(1, 1), RuleSize(1, 1)),  # 7
+        (RuleSize(1, 1), RuleSize(1, 1)),  # 8
     )
 
     _alt_conds: ClassVar[tuple[tuple[float, ...], ...]] = (
         (1, 1),  # 0
-        (1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),  # 1
-        (1, 1, 1),  # 2
+        (1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),  # 1
+        (1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),  # 2
+        (1, 1, 1, 1, 1, 1, 1),  # 3
+        (1, 1, 1, 1),  # 4
+        (1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),  # 5
+        (1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),  # 6
+        (1, 1, 1),  # 7
     )
 
     _quant_sizes: ClassVar[tuple[RuleSize, ...]] = (
         RuleSize(0, 0),  # 0
-        RuleSize(3, 2),  # 1
+        RuleSize(2, 2),  # 1
         RuleSize(1, 2),  # 2
     )
 

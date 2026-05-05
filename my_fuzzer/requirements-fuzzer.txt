@@ -1,0 +1,10 @@
+coverage
+docker
+grammarinator
+requests
+# LangGraph + LangChain chat stack. These need to be installed together so
+# `langgraph.graph.StateGraph` and `langchain-openai` agree on the same
+# `langchain-core` major line.
+langchain-core>=1.3.0,<2
+langchain-openai>=1.0.0,<2
+langgraph>=1.1.10,<2

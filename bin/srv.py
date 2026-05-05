@@ -72,4 +72,11 @@ def wttr(location=None):
 SERVER = WSGIServer(
     (LISTEN_HOST, int(os.environ.get("WTTRIN_SRV_PORT", LISTEN_PORT))), APP
 )
+
+import signal
+import gevent
+
+gevent.signal_handler(signal.SIGTERM, SERVER.stop)
+gevent.signal_handler(signal.SIGINT, SERVER.stop)
+
 SERVER.serve_forever()

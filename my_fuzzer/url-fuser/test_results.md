@@ -1,24 +1,104 @@
 # Backend API Test Results
 
-| Filename | URL | Status | Status Code | Error Message |
-|----------|-----|--------|-------------|---------------|
-| payload_18.txt | http://localhost:8002/bangkok | SUCCESS | 200 | - |
-| payload_6.txt | http://localhost:8002/hongkong | SUCCESS | 200 | - |
-| payload_7.txt | http://localhost:8002/0660=%94%F2 | SUCCESS | 200 | - |
-| payload_11.txt | http://localhost:8002/%78%dA%Ac%a3.&r%4C%dC=2&852=9 | WARNING | 404 | - |
-| payload_10.txt | http://localhost:8002/T8%fb%12%75%FF%F6%cb=9649&se%1c%7B%1E%ec | WARNING | 404 | - |
-| payload_4.txt | http://localhost:8002/newyork | SUCCESS | 200 | - |
-| payload_14.txt | http://localhost:8002/C | SUCCESS | 200 | - |
-| payload_9.txt | http://localhost:8002/f=9 | SUCCESS | 200 | - |
-| payload_12.txt | http://localhost:8002/kVw5%fc&16469 | WARNING | 404 | - |
-| payload_13.txt | http://localhost:8002/hongkong | SUCCESS | 200 | - |
-| payload_0.txt | http://localhost:8002/seoul | SUCCESS | 200 | - |
-| payload_16.txt | http://localhost:8002/seoul | SUCCESS | 200 | - |
-| payload_2.txt | http://localhost:8002/london | SUCCESS | 200 | - |
-| payload_5.txt | http://localhost:8002/38&%1e%84%7e%1A%6B%ae%3e%E0%3D%1F%84=26 | SUCCESS | 200 | - |
-| payload_8.txt | http://localhost:8002/singapore | SUCCESS | 200 | - |
-| payload_15.txt | http://localhost:8002/0=61&YM=32 | SUCCESS | 200 | - |
-| payload_3.txt | http://localhost:8002/%0b%Eb%22 | WARNING | 404 | - |
-| payload_1.txt | http://localhost:8002/paris | SUCCESS | 200 | - |
-| payload_19.txt | http://localhost:8002/moscow | SUCCESS | 200 | - |
-| payload_17.txt | http://localhost:8002/tH%20%Af%aB%Af%E3D=%b0 | SUCCESS | 200 | - |
+| Filename | URL | Status | Status Code | Response Time (ms) | Error |
+|----------|-----|--------|-------------|--------------------|-------|
+| payload_0.txt | http://localhost:8002/moon?lang=hi | CRASH | 503 | 18 | - |
+| payload_1.txt | http://localhost:8002/moon?format=v2d | CRASH | 503 | 14 | - |
+| payload_10.txt | http://localhost:8002/madrid_200x_lang=es.png | CRASH | 503 | 21 | - |
+| payload_11.txt | http://localhost:8002//:bash.function | SUCCESS | 200 | 2 | - |
+| payload_12.txt | http://localhost:8002/moon.png | CRASH | 503 | 14 | - |
+| payload_13.txt | http://localhost:8002/hongkong.png | CRASH | 503 | 18 | - |
+| payload_14.txt | http://localhost:8002/moon | CRASH | 503 | 14 | - |
+| payload_15.txt | http://localhost:8002//:translation | SUCCESS | 200 | 2 | - |
+| payload_16.txt | http://localhost:8002/moon@istanbul_200x_lang=tr.png | CRASH | 503 | 13 | - |
+| payload_17.txt | http://localhost:8002/moon@sydney_200x_lang=en?lang=ja&format=v2n | WARNING | 404 | 993 | - |
+| payload_18.txt | http://localhost:8002//:help | SUCCESS | 200 | 2 | - |
+| payload_19.txt | http://localhost:8002/?format=v2d | CRASH | 503 | 12 | - |
+| payload_2.txt | http://localhost:8002/moon.png | CRASH | 503 | 13 | - |
+| payload_20.txt | http://localhost:8002/singapore_200x_lang=en.png | CRASH | 503 | 18 | - |
+| payload_21.txt | http://localhost:8002/hongkong.png | CRASH | 503 | 18 | - |
+| payload_22.txt | http://localhost:8002/?format=png | SUCCESS | 200 | 11 | - |
+| payload_23.txt | http://localhost:8002/moon?format=p1 | SUCCESS | 200 | 13 | - |
+| payload_24.txt | http://localhost:8002/moon?lang=th&format=v2 | SUCCESS | 200 | 9 | - |
+| payload_25.txt | http://localhost:8002/moon@berlin.png | CRASH | 503 | 14 | - |
+| payload_26.txt | http://localhost:8002/?format=j1 | SUCCESS | 200 | 33 | - |
+| payload_27.txt | http://localhost:8002/moon?format=v2 | CRASH | 503 | 11 | - |
+| payload_28.txt | http://localhost:8002/moon@riyadh?lang=es | CRASH | 503 | 13 | - |
+| payload_29.txt | http://localhost:8002/F&q&2 | SUCCESS | 200 | 737 | - |
+| payload_3.txt | http://localhost:8002/moon?lang=tr | CRASH | 503 | 14 | - |
+| payload_30.txt | http://localhost:8002/moon | CRASH | 503 | 14 | - |
+| payload_31.txt | http://localhost:8002/moon | CRASH | 503 | 14 | - |
+| payload_32.txt | http://localhost:8002/moon?format=v2n | CRASH | 503 | 12 | - |
+| payload_33.txt | http://localhost:8002/moon@singapore_200x_lang=en?lang=zh | CRASH | 503 | 80 | - |
+| payload_34.txt | http://localhost:8002/moon@moscow_200x_lang=ru.png | CRASH | 503 | 16 | - |
+| payload_35.txt | http://localhost:8002/city=%79 | SUCCESS | 200 | 467 | - |
+| payload_36.txt | http://localhost:8002/moon?format=v2d | CRASH | 503 | 20 | - |
+| payload_37.txt | http://localhost:8002/moon@bangkok_200x_lang=th.png | CRASH | 503 | 18 | - |
+| payload_38.txt | http://localhost:8002/?format=v2n | CRASH | 503 | 18 | - |
+| payload_39.txt | http://localhost:8002/Tokyo_200x_lang=jp | WARNING | 404 | 724 | - |
+| payload_4.txt | http://localhost:8002/moon@sydney_200x_lang=en?lang=fr&format=png | WARNING | 404 | 82 | - |
+| payload_40.txt | http://localhost:8002/moon | CRASH | 503 | 18 | - |
+| payload_41.txt | http://localhost:8002/moon?format=v2 | CRASH | 503 | 17 | - |
+| payload_42.txt | http://localhost:8002/moon?lang=th | CRASH | 503 | 17 | - |
+| payload_43.txt | http://localhost:8002/moon@riyadh?format=v2 | CRASH | 503 | 17 | - |
+| payload_44.txt | http://localhost:8002/?format=v2 | CRASH | 503 | 17 | - |
+| payload_45.txt | http://localhost:8002/t&T | SUCCESS | 200 | 729 | - |
+| payload_46.txt | http://localhost:8002//:help | SUCCESS | 200 | 2 | - |
+| payload_47.txt | http://localhost:8002/paris.png | CRASH | 503 | 23 | - |
+| payload_48.txt | http://localhost:8002/NewYork_200x_lang=en | WARNING | 404 | 277 | - |
+| payload_49.txt | http://localhost:8002//:help | SUCCESS | 200 | 3 | - |
+| payload_5.txt | http://localhost:8002/bangkok_200x_lang=th | SUCCESS | 200 | 24 | - |
+| payload_50.txt | http://localhost:8002/moscow_200x_lang=ru.png | CRASH | 503 | 28 | - |
+| payload_51.txt | http://localhost:8002/u&I | SUCCESS | 200 | 310 | - |
+| payload_52.txt | http://localhost:8002/?format=png | SUCCESS | 200 | 15 | - |
+| payload_53.txt | http://localhost:8002/moon | CRASH | 503 | 18 | - |
+| payload_54.txt | http://localhost:8002/moon.png | CRASH | 503 | 20 | - |
+| payload_55.txt | http://localhost:8002/?format=png | SUCCESS | 200 | 17 | - |
+| payload_56.txt | http://localhost:8002/Q&2 | SUCCESS | 200 | 417 | - |
+| payload_57.txt | http://localhost:8002/moon?lang=ar&format=v2n | SUCCESS | 200 | 14 | - |
+| payload_58.txt | http://localhost:8002//:iterm2 | SUCCESS | 200 | 2 | - |
+| payload_59.txt | http://localhost:8002/moon?lang=tr&format=p1 | SUCCESS | 200 | 12 | - |
+| payload_6.txt | http://localhost:8002//:iterm2 | SUCCESS | 200 | 2 | - |
+| payload_60.txt | http://localhost:8002/moon.png | CRASH | 503 | 17 | - |
+| payload_61.txt | http://localhost:8002/?format=p1 | SUCCESS | 200 | 15 | - |
+| payload_62.txt | http://localhost:8002/?format=p1 | SUCCESS | 200 | 16 | - |
+| payload_63.txt | http://localhost:8002/?format=png | SUCCESS | 200 | 14 | - |
+| payload_64.txt | http://localhost:8002/?format=v2d | CRASH | 503 | 17 | - |
+| payload_65.txt | http://localhost:8002/moon@Paris_200x_lang=ru?lang=ja | CRASH | 503 | 85 | - |
+| payload_66.txt | http://localhost:8002/moon.png | CRASH | 503 | 20 | - |
+| payload_67.txt | http://localhost:8002/moon@dubai?lang=fr | CRASH | 503 | 22 | - |
+| payload_68.txt | http://localhost:8002/moon@rome?format=png | SUCCESS | 200 | 218 | - |
+| payload_69.txt | http://localhost:8002//:iterm2 | SUCCESS | 200 | 2 | - |
+| payload_7.txt | http://localhost:8002/?format=png | SUCCESS | 200 | 12 | - |
+| payload_70.txt | http://localhost:8002/moon@berlin?lang=de | CRASH | 503 | 18 | - |
+| payload_71.txt | http://localhost:8002/moon | CRASH | 503 | 18 | - |
+| payload_72.txt | http://localhost:8002//:bash.function | SUCCESS | 200 | 2 | - |
+| payload_73.txt | http://localhost:8002/moon | CRASH | 503 | 18 | - |
+| payload_74.txt | http://localhost:8002/moon?lang=ja&format=png | SUCCESS | 200 | 258 | - |
+| payload_75.txt | http://localhost:8002/moon?format=j2 | SUCCESS | 200 | 18 | - |
+| payload_76.txt | http://localhost:8002/moon@moon | CRASH | 503 | 18 | - |
+| payload_77.txt | http://localhost:8002/format=v2 | SUCCESS | 200 | 313 | - |
+| payload_78.txt | http://localhost:8002/moon@tokyo.png | CRASH | 503 | 20 | - |
+| payload_79.txt | http://localhost:8002/moon?format=png | SUCCESS | 200 | 15 | - |
+| payload_8.txt | http://localhost:8002/seoul_200x_lang=ko.png | CRASH | 503 | 24 | - |
+| payload_80.txt | http://localhost:8002/?format=v2d | CRASH | 503 | 19 | - |
+| payload_81.txt | http://localhost:8002/moon@moscow_200x_lang=ru?lang=tr | CRASH | 503 | 87 | - |
+| payload_82.txt | http://localhost:8002/moon?lang=es&format=j2 | SUCCESS | 200 | 23 | - |
+| payload_83.txt | http://localhost:8002/moon?format=v2 | CRASH | 503 | 17 | - |
+| payload_84.txt | http://localhost:8002/1&format=e&Q | WARNING | 404 | 348 | - |
+| payload_85.txt | http://localhost:8002/moon@Tokyo_200x_lang=jp?lang=zh&format=p1 | WARNING | 404 | 85 | - |
+| payload_86.txt | http://localhost:8002//:help | SUCCESS | 200 | 2 | - |
+| payload_87.txt | http://localhost:8002/berlin | SUCCESS | 200 | 19 | - |
+| payload_88.txt | http://localhost:8002/1 | SUCCESS | 200 | 21 | - |
+| payload_89.txt | http://localhost:8002/moscow_200x_lang=ru.png | CRASH | 503 | 25 | - |
+| payload_9.txt | http://localhost:8002/?format=png | SUCCESS | 200 | 13 | - |
+| payload_90.txt | http://localhost:8002/moon@bangkok | CRASH | 503 | 19 | - |
+| payload_91.txt | http://localhost:8002/moon?lang=ru&format=png | SUCCESS | 200 | 15 | - |
+| payload_92.txt | http://localhost:8002/cairo.png | CRASH | 503 | 24 | - |
+| payload_93.txt | http://localhost:8002/moon?lang=fr | CRASH | 503 | 20 | - |
+| payload_94.txt | http://localhost:8002/moon?lang=th&format=v2 | SUCCESS | 200 | 13 | - |
+| payload_95.txt | http://localhost:8002/I | SUCCESS | 200 | 20 | - |
+| payload_96.txt | http://localhost:8002/moon@moscow_200x_lang=ru | CRASH | 503 | 91 | - |
+| payload_97.txt | http://localhost:8002/moon@Paris_200x_lang=ru?lang=ru&format=v2n | CRASH | 503 | 91 | - |
+| payload_98.txt | http://localhost:8002/moon?lang=ja | CRASH | 503 | 19 | - |
+| payload_99.txt | http://localhost:8002/city=%B7%b4%b94I&t | SUCCESS | 200 | 357 | - |

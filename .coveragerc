@@ -1,0 +1,7 @@
+[run]
+data_file = my_fuzzer/fuzzer_cache/.coverage
+
+[paths]
+source =
+    /home/youssef/github/wttr.in
+    /app

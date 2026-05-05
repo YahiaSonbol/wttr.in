@@ -9,3 +9,16 @@ log/
 *.dat
 .antlr
 .codex
+
+my_fuzzer/url-fuser/__pycache__
+my_fuzzer/__pycache__
+
+my_fuzzer/fuzzer_cache
+my_fuzzer/history/
+my_fuzzer/logs/
+my_fuzzer/url-fuser/coverage/
+my_fuzzer/findings/
+my_fuzzer/url-fuser/test-cases
+
+my_fuzzer/.env
+.env

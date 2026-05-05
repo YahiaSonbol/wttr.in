@@ -62,6 +62,20 @@ port
 query
     : search
     | CITY
+    | 'moon'
+    | 'moon' '@' CITY
+    | '?' 'format' '=' ('j1' | 'j2' | 'v2' | 'v2n' | 'v2d' | 'p1' | 'png')
+    | '/' ':' ('help' | 'translation' | 'bash.function' | 'iterm2')
+    | CITY '.png'
+    | 'moon' '.png'
+    | 'moon' '@' CITY '.png'
+    | '?' 'format' '=' 'png'
+    | 'moon' '?' 'format' '=' ('j1' | 'j2' | 'v2' | 'v2n' | 'v2d' | 'p1' | 'png')
+    | 'moon' '@' CITY '?' 'format' '=' ('j1' | 'j2' | 'v2' | 'v2n' | 'v2d' | 'p1' | 'png')
+    | 'moon' '?' 'lang' '=' ('en' | 'ru' | 'de' | 'es' | 'fr' | 'ja' | 'zh' | 'ko' | 'ar' | 'th' | 'tr' | 'hi')
+    | 'moon' '@' CITY '?' 'lang' '=' ('en' | 'ru' | 'de' | 'es' | 'fr' | 'ja' | 'zh' | 'ko' | 'ar' | 'th' | 'tr' | 'hi')
+    | 'moon' '?' 'lang' '=' ('en' | 'ru' | 'de' | 'es' | 'fr' | 'ja' | 'zh' | 'ko' | 'ar' | 'th' | 'tr' | 'hi') '&' 'format' '=' ('j1' | 'j2' | 'v2' | 'v2n' | 'v2d' | 'p1' | 'png')
+    | 'moon' '@' CITY '?' 'lang' '=' ('en' | 'ru' | 'de' | 'es' | 'fr' | 'ja' | 'zh' | 'ko' | 'ar' | 'th' | 'tr' | 'hi') '&' 'format' '=' ('j1' | 'j2' | 'v2' | 'v2n' | 'v2d' | 'p1' | 'png')
     ;
 
 search
@@ -70,6 +84,13 @@ search
 
 searchparameter
     : string ('=' (string | DIGITS | HEX))?
+    | 'format' '=' ('j1' | 'j2' | 'v2' | 'v2n' | 'v2d' | 'p1' | 'png')
+    | 'lang' '=' ('en' | 'ru' | 'de' | 'es' | 'fr' | 'ja' | 'zh' | 'ko' | 'ar' | 'th' | 'tr' | 'hi')
+    | 'A' | 'd' | 'n' | 'm' | 'M' | 'u' | 'I' | 't' | 'T' | 'p' | 'q' | 'Q' | 'F' | '0' | '1' | '2' | '3'
+    | 'lang' '=' STRING
+    | 'format' '=' STRING
+    | 'location' '=' STRING
+    | 'city' '=' STRING
     ;
 
 string
@@ -103,5 +124,5 @@ PORTS
     ;
 
 CITY
-    : 'cairo' | 'paris' | 'london' | 'newyork' | 'tokyo' | 'moscow' | 'beijing' | 'delhi' | 'sydney' | 'rome' | 'berlin' | 'madrid' | 'toronto' | 'dubai' | 'singapore' | 'hongkong' | 'seoul' | 'bangkok' | 'istanbul' | 'riyadh'
+    : 'cairo' | 'paris' | 'london' | 'newyork' | 'tokyo' | 'moscow' | 'beijing' | 'delhi' | 'sydney' | 'rome' | 'berlin' | 'madrid' | 'toronto' | 'dubai' | 'singapore' | 'hongkong' | 'seoul' | 'bangkok' | 'istanbul' | 'riyadh' | 'moon' | 'Paris_200x_lang=ru' | 'London_200x_lang=en' | 'Tokyo_200x_lang=jp' | 'NewYork_200x_lang=en' | 'Berlin_200x_lang=de' | 'moscow_200x_lang=ru' | 'beijing_200x_lang=zh' | 'delhi_200x_lang=hi' | 'sydney_200x_lang=en' | 'rome_200x_lang=it' | 'madrid_200x_lang=es' | 'toronto_200x_lang=en' | 'dubai_200x_lang=ar' | 'singapore_200x_lang=en' | 'hongkong_200x_lang=zh' | 'seoul_200x_lang=ko' | 'bangkok_200x_lang=th' | 'istanbul_200x_lang=tr' | 'riyadh_200x_lang=ar'
     ;
