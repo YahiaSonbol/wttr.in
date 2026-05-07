@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from fuzzer_agent.orchestrator import main
+from agent.orchestrator import main
 
 
 def setup_logging() -> None:

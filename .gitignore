@@ -22,3 +22,5 @@ my_fuzzer/url-fuser/test-cases
 
 my_fuzzer/.env
 .env
+
+my_fuzzer/generator/test-cases
