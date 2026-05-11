@@ -24,6 +24,8 @@ class FuzzerConfig:
     findings_dir: Path
     history_dir: Path
     logs_dir: Path
+    reports_dir: Path
+    raw_dir: Path
 
     # == Target Settings ==
     image: str
@@ -60,6 +62,9 @@ def make_config(args: argparse.Namespace) -> FuzzerConfig:
 
     env_file = Path(args.env_file).expanduser().resolve() if args.env_file else fuzzer_dir / ".env"
     generator_dir = fuzzer_dir / "generator"
+    logs_dir = fuzzer_dir / "logs"
+    raw_dir = logs_dir / "raw"
+    reports_dir = logs_dir / "reports"
 
     load_dotenv(env_file)
     llm_model = str(os.getenv("LLM_MODEL_NAME"))
@@ -72,14 +77,16 @@ def make_config(args: argparse.Namespace) -> FuzzerConfig:
         env_file=env_file,
         grammar_file=fuzzer_dir / "url.g4",
         coverage_json=fuzzer_dir / "coverage.json",
-        iteration_log=fuzzer_dir / "logs" / "iterations.jsonl",
+        iteration_log=raw_dir / "iterations.jsonl",
 
         generator_dir=generator_dir,
         testcases_dir=generator_dir / "test-cases",
         cache_dir=fuzzer_dir / "fuzzer_cache",
         findings_dir=fuzzer_dir / "findings",
         history_dir=fuzzer_dir / "history",
-        logs_dir=fuzzer_dir / "logs",
+        logs_dir=logs_dir,
+        reports_dir=reports_dir,
+        raw_dir=raw_dir,
         
         image=args.image,
         host_port=args.host_port,
@@ -108,8 +115,8 @@ def make_config(args: argparse.Namespace) -> FuzzerConfig:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="LLM-guided autonomous grammar fuzzer")
     parser.add_argument("--env-file", default=None)
-    parser.add_argument("--iterations", type=int, default=10)
-    parser.add_argument("--cases", type=int, default=50)
+    parser.add_argument("--iterations", type=int, default=25)
+    parser.add_argument("--cases", type=int, default=400)
     parser.add_argument("--depth", type=int, default=20)
     parser.add_argument("--image", default="wttr:latest")
     parser.add_argument("--host-port", type=int, default=8002)

@@ -54,6 +54,10 @@ Protected rules: {protected_rules}
 
 {coverage_summary}
 
+## City+Format Feature Coverage
+
+{feature_coverage_summary}
+
 ## Missing-Line Hotspots
 
 {missing_hotspots}
@@ -71,11 +75,11 @@ Protected rules: {protected_rules}
 Analyze the data above and answer these questions:
 
 1. **Which response classes are overrepresented?** (e.g., too many 200s from the same path family)
-2. **Which URL families are underexplored?** (e.g., moon paths, PNG paths, special routes)
+2. **Which scored city+format combinations are underexplored or missing?**
 3. **Which missing lines look reachable by grammar changes?**
 4. **Which missing lines appear reachable ONLY through header/host changes?**
 5. **Which missing lines are likely unreachable due to harness or environment limits?**
-6. **Which 1–3 rule edits are most promising for the next iteration?**
+6. **Which 1–3 rule edits are most promising for the next iteration while focusing on plain city routes and supported format types only, without removing any currently supported scored city or format?**
 7. **What request-space recommendations (host, UA, language, IP profiles) would help reach new code paths?**
 
 ## Response Format
@@ -103,3 +107,4 @@ Return JSON only. No markdown fences. Use this exact shape:
 ```
 
 Keep `recommended_rule_edits` to 1–3 entries. Each `rule` must be an existing editable rule name. Do not recommend changes to protected rules.
+Do not shrink the scored city list or the supported format list.

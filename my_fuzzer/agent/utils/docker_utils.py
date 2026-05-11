@@ -2,6 +2,7 @@ import os
 import docker
 from ..core.config import FuzzerConfig
 
+
 def build_image(
     client: docker.DockerClient, 
     config: FuzzerConfig,
@@ -16,6 +17,18 @@ def build_image(
                 print(f"[build] {line}")
 
 
+def ensure_image(
+    client: docker.DockerClient,
+    config: FuzzerConfig,
+) -> None:
+    try:
+        client.images.get(config.image)
+        return
+    except docker.errors.ImageNotFound:
+        print(f"[build] Local image {config.image} was not found. Building it now.")
+        build_image(client, config)
+
+
 def start_container(
     client: docker.DockerClient,
     config: FuzzerConfig,
@@ -23,6 +36,7 @@ def start_container(
 ) -> docker.models.containers.Container:
     container_name = f"wttr-fuzzer-{os.getpid()}-{iteration}"
     print(f"[docker] Starting container {container_name}")
+    ensure_image(client, config)
 
     return client.containers.run(
         config.image,

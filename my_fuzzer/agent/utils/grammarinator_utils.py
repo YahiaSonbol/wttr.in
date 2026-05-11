@@ -1,10 +1,14 @@
-from ..core.config import FuzzerConfig
-from .cli_utils import remove_if_exists, run_command
 from pathlib import Path
 
-def generate_testcases(config: FuzzerConfig) -> list[Path]:
-    remove_if_exists(config.testcases_dir)
+from ..core.config import FuzzerConfig
+from .cli_utils import remove_if_exists, run_command
+
+
+def generate_testcases(config: FuzzerConfig, count: int | None = None) -> list[Path]:
+    remove_if_exists(config.generator_dir)
+    config.generator_dir.mkdir(parents=True, exist_ok=True)
     config.testcases_dir.mkdir(parents=True, exist_ok=True)
+    requested_count = int(count if count is not None else config.case_count)
 
     run_command(
         [
@@ -28,7 +32,7 @@ def generate_testcases(config: FuzzerConfig) -> list[Path]:
             "-o",
             "test-cases/payload_%d.txt",
             "-n",
-            str(config.case_count),
+            str(requested_count),
             "--sys-path",
             ".",
         ],
@@ -39,4 +43,3 @@ def generate_testcases(config: FuzzerConfig) -> list[Path]:
     if not payloads:
         raise RuntimeError("No payloads were generated.")
     return payloads
-

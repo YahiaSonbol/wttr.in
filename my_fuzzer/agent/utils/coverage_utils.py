@@ -36,13 +36,15 @@ def coverage_excerpt(
 def write_markdown_results(results: list[TestResult], output_file: Path) -> None:
     with output_file.open("w", encoding="utf-8") as handle:
         handle.write("# Backend API Test Results\n\n")
-        handle.write("| Filename | URL | Status | Status Code | Response Time (ms) | Error |\n")
-        handle.write("|----------|-----|--------|-------------|--------------------|-------|\n")
+        handle.write("| Filename | URL | Status | Status Code | Response Time (ms) | Feature Key | Ignored Reason | Error |\n")
+        handle.write("|----------|-----|--------|-------------|--------------------|-------------|----------------|-------|\n")
         for result in results:
             handle.write(
                 f"| {result.filename} | {result.url} | {result.status} | "
                 f"{result.status_code if result.status_code is not None else 'N/A'} | "
                 f"{result.response_time_ms if result.response_time_ms is not None else 'N/A'} | "
+                f"{result.feature_key or '-'} | "
+                f"{result.ignored_reason or '-'} | "
                 f"{result.error_message or '-'} |\n"
             )
 

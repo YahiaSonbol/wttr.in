@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from .core.config import FuzzerConfig
+from .feature_coverage_catalog import SCORED_CITIES, SCORED_FORMATS
 from .utils.cli_utils import run_command
 
 from .models import (
@@ -297,7 +298,38 @@ def validate_planner_rewriter_consistency(
     return warnings
 
 
+def validate_feature_reachability(candidate_text: str) -> tuple[bool, str]:
+    missing_cities = [city for city in SCORED_CITIES if f"'{city}'" not in candidate_text]
+    missing_query_formats = [
+        format_type
+        for format_type in SCORED_FORMATS
+        if format_type not in {"default", "png"} and f"'{format_type}'" not in candidate_text
+    ]
+
+    missing_route_parts: list[str] = []
+    if "'.png'" not in candidate_text:
+        missing_route_parts.append("png suffix route")
+    if "'format'" not in candidate_text:
+        missing_route_parts.append("format query route")
+
+    problems: list[str] = []
+    if missing_cities:
+        problems.append("missing scored cities: " + ", ".join(missing_cities))
+    if missing_query_formats:
+        problems.append("missing scored query formats: " + ", ".join(missing_query_formats))
+    if missing_route_parts:
+        problems.append("missing route support: " + ", ".join(missing_route_parts))
+
+    if problems:
+        return False, "Candidate grammar shrank the scored feature space: " + "; ".join(problems)
+    return True, "feature reachability preserved"
+
+
 def validate_candidate_grammar(config: FuzzerConfig, candidate_text: str) -> tuple[bool, str]:
+    reachability_ok, reachability_message = validate_feature_reachability(candidate_text)
+    if not reachability_ok:
+        return False, reachability_message
+
     with tempfile.TemporaryDirectory(prefix="wttr-grammar-check-") as temp_dir_name:
         temp_dir = Path(temp_dir_name)
         grammar_file = temp_dir / "url.g4"
@@ -321,4 +353,6 @@ def validate_candidate_grammar(config: FuzzerConfig, candidate_text: str) -> tup
         if result.returncode != 0:
             return False, combined.strip()
 
-        return True, combined.strip() or "grammarinator-process succeeded."
+        if combined.strip():
+            return True, combined.strip()
+        return True, reachability_message + "; grammarinator-process succeeded."

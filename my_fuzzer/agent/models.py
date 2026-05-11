@@ -18,6 +18,12 @@ class TestResult:
     error_message: str | None
     response_time_ms: int | None
     headers: dict[str, str] | None = None
+    feature_scored: bool = False
+    base_url: str | None = None
+    city_name: str | None = None
+    format_type: str | None = None
+    feature_key: str | None = None
+    ignored_reason: str | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -51,6 +57,7 @@ class GraphState(TypedDict, total=False):
     current_grammar: str
     results: list[dict[str, Any]]
     coverage_data: dict[str, Any]
+    feature_summary: dict[str, Any]
     validation_feedback: str
     iteration_history: str
 

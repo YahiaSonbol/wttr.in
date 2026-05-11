@@ -25,6 +25,7 @@ from .utils.llm_utils import (
     feedback_block_formatter,
     results_formatter,
     coverage_data_formatter,
+    feature_coverage_formatter,
     missing_hotspots_formatter,
     iteration_history_formatter,
     response_text_formatter,
@@ -47,6 +48,7 @@ def build_planner_prompt(
     current_grammar: str,
     results: list[TestResult],
     coverage_data: dict[str, Any],
+    feature_summary: dict[str, Any],
     validation_feedback: str | None = None,
     iteration_history: str | None = None,
 ) -> str:
@@ -61,6 +63,7 @@ def build_planner_prompt(
         editable_rules=", ".join(editable_rule_names(current_grammar)),
         results_summary=results_formatter(results),
         coverage_summary=coverage_data_formatter(coverage_data, config),
+        feature_coverage_summary=feature_coverage_formatter(feature_summary),
         missing_hotspots=missing_hotspots_formatter(coverage_data, config),
         validation_feedback=feedback_block_formatter(validation_feedback),
         iteration_history=iteration_history or "No previous iterations.",
@@ -156,6 +159,7 @@ def _make_planner_node(config: FuzzerConfig):
             state["current_grammar"],
             state.get("results", []),
             state.get("coverage_data", {}),
+            state.get("feature_summary", {}),
             validation_feedback=state.get("validation_feedback"),
             iteration_history=state.get("iteration_history"),
         )
@@ -276,6 +280,7 @@ def run_mutation_graph(
     current_grammar: str,
     results: list[TestResult],
     coverage_data: dict[str, Any],
+    feature_summary: dict[str, Any],
     validation_feedback: str | None = None,
     iteration_history: str | None = None,
 ) -> GraphState:
@@ -289,6 +294,7 @@ def run_mutation_graph(
         "current_grammar": current_grammar,
         "results": results,
         "coverage_data": coverage_data,
+        "feature_summary": feature_summary,
         "validation_feedback": validation_feedback or "",
         "iteration_history": iteration_history or "",
         "trace": [],

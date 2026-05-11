@@ -24,6 +24,17 @@ from .utils.coverage_utils import (
     save_grammar_snapshot,
     append_iteration_log,
 )
+from .utils.report_utils import (
+    ensure_report_dirs,
+    write_coverage_diff_report,
+    write_cycle_report,
+    write_iteration_report,
+    write_url_diff_report,
+)
+from .utils.feature_coverage import (
+    feature_delta,
+    merge_feature_summaries,
+)
 from .test_runner import (
     run_testing_batch,
 )
@@ -57,13 +68,13 @@ def _write_attempt_artifacts(config, iteration: int, attempt: int, state: dict) 
     ]:
         content = state.get(key, "")
         if content:
-            path = config.logs_dir / f"{prefix}_{suffix}"
+            path = config.raw_dir / f"{prefix}_{suffix}"
             path.write_text(content if isinstance(content, str) else json.dumps(content, indent=2), encoding="utf-8")
             files[suffix] = str(path)
 
     trace = state.get("trace", [])
     if trace:
-        trace_path = config.logs_dir / f"{prefix}_trace.json"
+        trace_path = config.raw_dir / f"{prefix}_trace.json"
         write_json(trace, trace_path)
         files["trace"] = str(trace_path)
 
@@ -71,7 +82,7 @@ def _write_attempt_artifacts(config, iteration: int, attempt: int, state: dict) 
 
 
 def _write_attempt_trace(config, iteration: int, attempt: int, payload: dict) -> None:
-    trace_file = config.logs_dir / f"iteration_{iteration:03d}_llm_attempt_{attempt:02d}.json"
+    trace_file = config.raw_dir / f"iteration_{iteration:03d}_llm_attempt_{attempt:02d}.json"
     write_json(payload, trace_file)
 
 
@@ -84,118 +95,80 @@ def _preview_text(text: str | None, limit: int = 240) -> str:
     return single_line[: limit - 3] + "..."
 
 
+def _score_tuple(feature_summary: dict | None, line_coverage: float | None) -> tuple[float, float, float]:
+    summary = feature_summary or {}
+    return (
+        float(summary.get("feature_coverage_percent", 0.0) or 0.0),
+        float(summary.get("successful_feature_coverage_percent", 0.0) or 0.0),
+        float(line_coverage or 0.0),
+    )
+
+
+def _update_cumulative_feature_progress(
+    config,
+    iteration_record: dict,
+    cumulative_feature_summary: dict | None,
+    *iteration_feature_summaries: dict | None,
+) -> dict:
+    next_cumulative = merge_feature_summaries(
+        [cumulative_feature_summary, *iteration_feature_summaries],
+        config.base_url,
+    )
+    iteration_record["cumulative_feature_summary"] = next_cumulative
+    iteration_record["cumulative_feature_coverage_percent"] = next_cumulative.get(
+        "feature_coverage_percent",
+        0.0,
+    )
+    iteration_record["cumulative_successful_feature_coverage_percent"] = next_cumulative.get(
+        "successful_feature_coverage_percent",
+        0.0,
+    )
+    iteration_record["cumulative_feature_delta"] = feature_delta(
+        cumulative_feature_summary,
+        next_cumulative,
+    )
+    return next_cumulative
+
+
+def _write_iteration_artifacts(
+    config,
+    iteration_record: dict,
+    previous_baseline_coverage,
+    previous_baseline_feature,
+    previous_baseline_results,
+    baseline_coverage,
+    baseline_feature: dict,
+    baseline_results,
+    candidate_coverage=None,
+    candidate_feature: dict | None = None,
+    candidate_results=None,
+) -> None:
+    coverage_diff_path, diff_summary = write_coverage_diff_report(
+        config,
+        iteration_record["iteration"],
+        previous_baseline_coverage,
+        previous_baseline_feature,
+        baseline_coverage,
+        baseline_feature,
+        candidate_coverage=candidate_coverage,
+        candidate_feature=candidate_feature,
+    )
+    url_diff_path = write_url_diff_report(
+        config,
+        iteration_record["iteration"],
+        previous_baseline_results,
+        baseline_results,
+        candidate_results=candidate_results,
+    )
+    iteration_record["coverage_diff_report"] = str(coverage_diff_path)
+    iteration_record["url_diff_report"] = str(url_diff_path)
+    iteration_record["diff_summary"] = diff_summary
+    iteration_report_path = write_iteration_report(config, iteration_record)
+    iteration_record["iteration_report"] = str(iteration_report_path)
+
+
 def _write_run_report(config, report: dict) -> Path:
-    started_at = report["started_at"].replace(":", "").replace("-", "")
-    started_at = started_at.replace("T", "_").replace("Z", "")
-    report_path = config.logs_dir / f"run_report_{started_at}.md"
-    latest_report_path = config.logs_dir / "latest_run_report.md"
-
-    lines: list[str] = []
-    lines.append("# Fuzzer Loop Run Report")
-    lines.append("")
-    lines.append("## Overview")
-    lines.append("")
-    lines.append("| Field | Value |")
-    lines.append("|---|---|")
-    overview_rows = [
-        ("Status", report["status"]),
-        ("Started At", report["started_at"]),
-        ("Finished At", report["finished_at"]),
-        ("Duration Seconds", f"{report['duration_seconds']:.2f}"),
-        ("Configured Iterations", str(report["config"]["iterations"])),
-        ("Completed Iterations", str(report["completed_iterations"])),
-        ("Tests Per Batch", str(report["config"]["case_count"])),
-        ("Generation Depth", str(report["config"]["generation_depth"])),
-        ("Image", report["config"]["image"]),
-        ("Base URL", report["config"]["base_url"]),
-        ("LLM Model", report["config"]["llm_model"]),
-        ("Champion Coverage", f"{report['champion_coverage']:.2f}%"),
-        ("Final Grammar", report["final_grammar"]),
-        ("Findings Count", str(report["findings_count"])),
-    ]
-    if report.get("error"):
-        overview_rows.append(("Error", report["error"]))
-    for key, value in overview_rows:
-        lines.append(f"| {key} | {value} |")
-
-    lines.append("")
-    lines.append("## Iteration Summary")
-    lines.append("")
-    lines.append("| Iteration | Tests | Coverage | Success | Warning | Crash | Error | LLM Attempts | Mutation | Candidate Coverage | Decision |")
-    lines.append("|---|---:|---:|---:|---:|---:|---:|---:|---|---:|---|")
-    for item in report["iterations"]:
-        http_counts = item.get("http_counts", {})
-        lines.append(
-            "| {iteration} | {tests} | {coverage:.2f}% | {success} | {warning} | {crash} | {error} | {attempts} | {mutation} | {candidate_cov} | {decision} |".format(
-                iteration=item["iteration"],
-                tests=item.get("tests_run", 0),
-                coverage=item.get("coverage_percent", 0.0),
-                success=http_counts.get("SUCCESS", 0),
-                warning=http_counts.get("WARNING", 0),
-                crash=http_counts.get("CRASH", 0),
-                error=http_counts.get("ERROR", 0),
-                attempts=item.get("llm_attempts", 0),
-                mutation=item.get("mutation_status", "-"),
-                candidate_cov=(
-                    f"{item['candidate_coverage_percent']:.2f}%"
-                    if item.get("candidate_coverage_percent") is not None
-                    else "-"
-                ),
-                decision=item.get("decision", "-"),
-            )
-        )
-
-    lines.append("")
-    lines.append("## Iteration Details")
-    lines.append("")
-    for item in report["iterations"]:
-        lines.append(f"### Iteration {item['iteration']}")
-        lines.append("")
-        lines.append(f"- Tests run: {item.get('tests_run', 0)}")
-        lines.append(f"- Baseline coverage: {item.get('coverage_percent', 0.0):.2f}%")
-        lines.append(f"- Container exit code: {item.get('container_exit_code')}")
-        lines.append(f"- Mutation status: {item.get('mutation_status', '-')}")
-        lines.append(f"- Decision: {item.get('decision', '-')}")
-        if item.get("candidate_coverage_percent") is not None:
-            lines.append(f"- Candidate coverage: {item['candidate_coverage_percent']:.2f}%")
-        if item.get("coverage_delta") is not None:
-            lines.append(f"- Candidate delta vs champion: {item['coverage_delta']:+.2f}")
-        if item.get("mutation_rationale"):
-            lines.append(f"- Mutation rationale: {item['mutation_rationale']}")
-        if item.get("proposed_rules"):
-            lines.append(f"- Proposed rules: {', '.join(item['proposed_rules'])}")
-        if item.get("validation_output"):
-            lines.append(f"- Validation summary: `{_preview_text(item['validation_output'], 500)}`")
-        if item.get("planner_analysis"):
-            lines.append(f"- Planner analysis: {_preview_text(item['planner_analysis'], 300)}")
-        if item.get("reachability"):
-            reach = item["reachability"]
-            lines.append(f"- Reachable by grammar: {len(reach.get('grammar', []))} items")
-            lines.append(f"- Reachable by headers only: {len(reach.get('headers', []))} items")
-            lines.append(f"- Unreachable (harness): {len(reach.get('harness', []))} items")
-        if item.get("results_json"):
-            lines.append(f"- Baseline results: [{Path(item['results_json']).name}]({item['results_json']})")
-        if item.get("candidate_results_json"):
-            lines.append(
-                f"- Candidate results: [{Path(item['candidate_results_json']).name}]({item['candidate_results_json']})"
-            )
-        if item.get("artifact_files"):
-            artifact_names = ", ".join(Path(p).name for p in item["artifact_files"].values())
-            lines.append(f"- LLM artifacts: {artifact_names}")
-        lines.append("")
-
-    lines.append("## Artifacts")
-    lines.append("")
-    lines.append(f"- Iteration log: [{config.iteration_log.name}]({config.iteration_log})")
-    lines.append(f"- Logs directory: [{config.logs_dir.name}]({config.logs_dir})")
-    lines.append(f"- Findings directory: [{config.findings_dir.name}]({config.findings_dir})")
-    lines.append(f"- History directory: [{config.history_dir.name}]({config.history_dir})")
-    lines.append("")
-
-    content = "\n".join(lines)
-    report_path.write_text(content, encoding="utf-8")
-    latest_report_path.write_text(content, encoding="utf-8")
-    return report_path
+    return write_cycle_report(config, report)
 
 
 # ---------------------------------------------------------------------------
@@ -208,6 +181,7 @@ def _mutate_grammar(
     current_grammar: str,
     results,
     coverage_data,
+    feature_summary: dict,
     iteration_history_text: str = "",
 ) -> tuple[str | None, dict]:
     feedback: str | None = None
@@ -230,6 +204,7 @@ def _mutate_grammar(
                 current_grammar,
                 results,
                 coverage_data,
+                feature_summary,
                 validation_feedback=feedback,
                 iteration_history=iteration_history_text,
             )
@@ -366,14 +341,17 @@ def main() -> int:
         config.findings_dir,
         config.history_dir,
         config.logs_dir,
+        config.raw_dir,
+        config.reports_dir,
         config.generator_dir,
     )
+    ensure_report_dirs(config)
 
     client = docker.from_env()
     if config.build_image:
         build_image(client, config)
 
-    best_coverage = -1.0
+    best_score = (-1.0, -1.0, -1.0)
     best_grammar_text = config.grammar_file.read_text(encoding="utf-8")
     normal_exit_codes = {0, 130, 143, None}
     run_started_ts = time.time()
@@ -382,6 +360,10 @@ def main() -> int:
     run_status = "completed"
     run_error: str | None = None
     report_path: Path | None = None
+    previous_baseline_coverage = None
+    previous_baseline_feature = None
+    previous_baseline_results = None
+    cumulative_cycle_feature = None
 
     try:
         for iteration in range(1, config.iterations + 1):
@@ -423,9 +405,28 @@ def main() -> int:
             iteration_record["results_json"] = baseline_meta["results_json"]
             iteration_record["http_counts"] = baseline_meta["http"].get("counts", {})
             iteration_record["container_exit_code"] = baseline_meta["container_exit_code"]
+            iteration_record["feature_summary"] = baseline_meta["feature"]
+            iteration_record["generation"] = baseline_meta.get("generation", {})
+            iteration_record["baseline_feature_json"] = baseline_meta.get("feature_json")
+            iteration_record["feature_coverage_percent"] = baseline_meta["feature"].get("feature_coverage_percent", 0.0)
+            iteration_record["successful_feature_coverage_percent"] = baseline_meta["feature"].get(
+                "successful_feature_coverage_percent", 0.0
+            )
+            if baseline_meta.get("coverage_json"):
+                iteration_record["coverage_json"] = baseline_meta["coverage_json"]
 
             if baseline_meta["execution_error"]:
                 iteration_record["decision"] = "execution_error"
+                _write_iteration_artifacts(
+                    config,
+                    iteration_record,
+                    previous_baseline_coverage,
+                    previous_baseline_feature,
+                    previous_baseline_results,
+                    None,
+                    baseline_meta["feature"],
+                    results,
+                )
                 run_iterations.append(iteration_record)
                 save_finding(
                     config,
@@ -470,16 +471,21 @@ def main() -> int:
             iteration_summary = {
                 "iteration": iteration,
                 "coverage": coverage_digest,
+                "feature": baseline_meta["feature"],
+                "feature_coverage_percent": baseline_meta["feature"].get("feature_coverage_percent", 0.0),
+                "generation": baseline_meta.get("generation", {}),
                 "http": baseline_meta["http"],
                 "container_exit_code": exit_code,
-                "coverage_json": str(config.coverage_json),
+                "coverage_json": baseline_meta.get("coverage_json"),
+                "feature_json": baseline_meta.get("feature_json"),
                 "results_json": baseline_meta["results_json"],
             }
             append_iteration_log(config, iteration_summary)
             print(f"[coverage] {percent_covered:.2f}%")
 
-            if percent_covered > best_coverage:
-                best_coverage = percent_covered
+            baseline_score = _score_tuple(baseline_meta["feature"], percent_covered)
+            if baseline_score > best_score:
+                best_score = baseline_score
                 best_grammar_text = current_grammar
                 save_grammar_snapshot(config, iteration, "best", current_grammar)
 
@@ -487,7 +493,26 @@ def main() -> int:
                 iteration_record["mutation_status"] = "skipped_final_iteration"
                 iteration_record["decision"] = "kept_champion"
                 iteration_record["llm_attempts"] = 0
+                cumulative_cycle_feature = _update_cumulative_feature_progress(
+                    config,
+                    iteration_record,
+                    cumulative_cycle_feature,
+                    baseline_meta["feature"],
+                )
+                _write_iteration_artifacts(
+                    config,
+                    iteration_record,
+                    previous_baseline_coverage,
+                    previous_baseline_feature,
+                    previous_baseline_results,
+                    coverage_data,
+                    baseline_meta["feature"],
+                    results,
+                )
                 run_iterations.append(iteration_record)
+                previous_baseline_coverage = coverage_data
+                previous_baseline_feature = baseline_meta["feature"]
+                previous_baseline_results = results
                 print("[llm] Skipping mutation on the final iteration because there is no subsequent run to use a new grammar.")
                 continue
 
@@ -496,7 +521,7 @@ def main() -> int:
 
             print("[llm] Starting two-node LangGraph mutation step.")
             candidate_grammar, mutation_meta = _mutate_grammar(
-                config, iteration, current_grammar, results, coverage_data,
+                config, iteration, current_grammar, results, coverage_data, baseline_meta["feature"],
                 iteration_history_text=history_text,
             )
             attempt_traces = mutation_meta.get("attempt_traces", [])
@@ -519,7 +544,26 @@ def main() -> int:
             if candidate_grammar is None:
                 iteration_record["mutation_status"] = "rejected"
                 iteration_record["decision"] = "kept_current_grammar"
+                cumulative_cycle_feature = _update_cumulative_feature_progress(
+                    config,
+                    iteration_record,
+                    cumulative_cycle_feature,
+                    baseline_meta["feature"],
+                )
+                _write_iteration_artifacts(
+                    config,
+                    iteration_record,
+                    previous_baseline_coverage,
+                    previous_baseline_feature,
+                    previous_baseline_results,
+                    coverage_data,
+                    baseline_meta["feature"],
+                    results,
+                )
                 run_iterations.append(iteration_record)
+                previous_baseline_coverage = coverage_data
+                previous_baseline_feature = baseline_meta["feature"]
+                previous_baseline_results = results
                 save_finding(
                     config,
                     iteration,
@@ -533,7 +577,7 @@ def main() -> int:
 
             print("[llm] Evaluating candidate grammar against the current champion.")
             try:
-                candidate_percent, _, _, candidate_meta = run_testing_batch(
+                candidate_percent, candidate_coverage_data, candidate_results, candidate_meta = run_testing_batch(
                     config,
                     client,
                     iteration,
@@ -544,7 +588,26 @@ def main() -> int:
             except Exception as exc:
                 iteration_record["mutation_status"] = "candidate_execution_error"
                 iteration_record["decision"] = "kept_champion"
+                cumulative_cycle_feature = _update_cumulative_feature_progress(
+                    config,
+                    iteration_record,
+                    cumulative_cycle_feature,
+                    baseline_meta["feature"],
+                )
+                _write_iteration_artifacts(
+                    config,
+                    iteration_record,
+                    previous_baseline_coverage,
+                    previous_baseline_feature,
+                    previous_baseline_results,
+                    coverage_data,
+                    baseline_meta["feature"],
+                    results,
+                )
                 run_iterations.append(iteration_record)
+                previous_baseline_coverage = coverage_data
+                previous_baseline_feature = baseline_meta["feature"]
+                previous_baseline_results = results
                 save_finding(
                     config,
                     iteration,
@@ -562,10 +625,42 @@ def main() -> int:
                 print("[llm] Keeping the current champion grammar.")
                 continue
 
+            iteration_record["candidate_results_json"] = candidate_meta.get("results_json")
+            iteration_record["candidate_feature_summary"] = candidate_meta.get("feature")
+            iteration_record["candidate_generation"] = candidate_meta.get("generation", {})
+            iteration_record["candidate_feature_json"] = candidate_meta.get("feature_json")
+            iteration_record["candidate_feature_coverage_percent"] = candidate_meta.get("feature", {}).get(
+                "feature_coverage_percent", 0.0
+            )
+            iteration_record["candidate_successful_feature_coverage_percent"] = candidate_meta.get("feature", {}).get(
+                "successful_feature_coverage_percent", 0.0
+            )
+            if candidate_meta.get("coverage_json"):
+                iteration_record["candidate_coverage_json"] = candidate_meta["coverage_json"]
+
             if candidate_meta["execution_error"]:
                 iteration_record["mutation_status"] = "candidate_execution_error"
                 iteration_record["decision"] = "kept_champion"
+                cumulative_cycle_feature = _update_cumulative_feature_progress(
+                    config,
+                    iteration_record,
+                    cumulative_cycle_feature,
+                    baseline_meta["feature"],
+                )
+                _write_iteration_artifacts(
+                    config,
+                    iteration_record,
+                    previous_baseline_coverage,
+                    previous_baseline_feature,
+                    previous_baseline_results,
+                    coverage_data,
+                    baseline_meta["feature"],
+                    results,
+                )
                 run_iterations.append(iteration_record)
+                previous_baseline_coverage = coverage_data
+                previous_baseline_feature = baseline_meta["feature"]
+                previous_baseline_results = results
                 save_finding(
                     config,
                     iteration,
@@ -584,26 +679,77 @@ def main() -> int:
                 print("[llm] Keeping the current champion grammar.")
                 continue
 
-            improvement = candidate_percent - best_coverage
+            champion_score_before = best_score
+            candidate_score = _score_tuple(candidate_meta["feature"], candidate_percent)
+            improvement = candidate_score[0] - champion_score_before[0]
             iteration_record["candidate_coverage_percent"] = candidate_percent
-            iteration_record["coverage_delta"] = improvement
-            iteration_record["candidate_results_json"] = candidate_meta.get("results_json")
-            if candidate_percent >= best_coverage:
-                best_coverage = candidate_percent
+            iteration_record["feature_delta"] = improvement
+            iteration_record["line_coverage_delta"] = candidate_percent - percent_covered
+            if candidate_score >= best_score:
+                best_score = candidate_score
                 best_grammar_text = candidate_grammar
                 config.grammar_file.write_text(candidate_grammar, encoding="utf-8")
                 save_grammar_snapshot(config, iteration, "after", candidate_grammar)
                 save_grammar_snapshot(config, iteration, "best", candidate_grammar)
                 iteration_record["mutation_status"] = "accepted"
                 iteration_record["decision"] = "promoted_to_champion"
+                cumulative_cycle_feature = _update_cumulative_feature_progress(
+                    config,
+                    iteration_record,
+                    cumulative_cycle_feature,
+                    baseline_meta["feature"],
+                    candidate_meta["feature"],
+                )
+                _write_iteration_artifacts(
+                    config,
+                    iteration_record,
+                    previous_baseline_coverage,
+                    previous_baseline_feature,
+                    previous_baseline_results,
+                    coverage_data,
+                    baseline_meta["feature"],
+                    results,
+                    candidate_coverage=candidate_coverage_data,
+                    candidate_feature=candidate_meta["feature"],
+                    candidate_results=candidate_results,
+                )
                 run_iterations.append(iteration_record)
-                print(f"[llm] Accepted candidate grammar at {candidate_percent:.2f}% (delta {improvement:+.2f}).")
+                previous_baseline_coverage = coverage_data
+                previous_baseline_feature = baseline_meta["feature"]
+                previous_baseline_results = results
+                print(
+                    f"[llm] Accepted candidate grammar at feature {candidate_meta['feature'].get('feature_coverage_percent', 0.0):.2f}% "
+                    f"and line coverage {candidate_percent:.2f}%."
+                )
                 continue
 
             config.grammar_file.write_text(best_grammar_text, encoding="utf-8")
             iteration_record["mutation_status"] = "regression"
             iteration_record["decision"] = "kept_champion"
+            cumulative_cycle_feature = _update_cumulative_feature_progress(
+                config,
+                iteration_record,
+                cumulative_cycle_feature,
+                baseline_meta["feature"],
+                candidate_meta["feature"],
+            )
+            _write_iteration_artifacts(
+                config,
+                iteration_record,
+                previous_baseline_coverage,
+                previous_baseline_feature,
+                previous_baseline_results,
+                coverage_data,
+                baseline_meta["feature"],
+                results,
+                candidate_coverage=candidate_coverage_data,
+                candidate_feature=candidate_meta["feature"],
+                candidate_results=candidate_results,
+            )
             run_iterations.append(iteration_record)
+            previous_baseline_coverage = coverage_data
+            previous_baseline_feature = baseline_meta["feature"]
+            previous_baseline_results = results
             save_finding(
                 config,
                 iteration,
@@ -613,14 +759,18 @@ def main() -> int:
                 {
                     "candidate_grammar": candidate_grammar,
                     "candidate_coverage": candidate_percent,
-                    "best_coverage": best_coverage,
+                    "candidate_feature_coverage": candidate_meta["feature"].get("feature_coverage_percent", 0.0),
+                    "best_feature_coverage": best_score[0],
                     "delta": improvement,
                     "candidate_meta": candidate_meta,
                     "mutation_meta": mutation_meta,
                 },
             )
-            print(f"[llm] Rejected candidate grammar at {candidate_percent:.2f}% (delta {improvement:+.2f}).")
-            print(f"[llm] Keeping champion grammar at {best_coverage:.2f}%.")
+            print(
+                f"[llm] Rejected candidate grammar at feature {candidate_meta['feature'].get('feature_coverage_percent', 0.0):.2f}% "
+                f"(delta {improvement:+.2f})."
+            )
+            print(f"[llm] Keeping champion grammar at feature {best_score[0]:.2f}%.")
     except Exception as exc:
         run_status = "failed"
         run_error = str(exc)
@@ -633,7 +783,13 @@ def main() -> int:
             "finished_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
             "duration_seconds": time.time() - run_started_ts,
             "completed_iterations": len(run_iterations),
-            "champion_coverage": best_coverage if best_coverage >= 0 else 0.0,
+            "champion_feature_coverage": best_score[0] if best_score[0] >= 0 else 0.0,
+            "champion_successful_feature_coverage": best_score[1] if best_score[1] >= 0 else 0.0,
+            "champion_line_coverage": best_score[2] if best_score[2] >= 0 else 0.0,
+            "cumulative_feature_coverage": (cumulative_cycle_feature or {}).get("feature_coverage_percent", 0.0),
+            "cumulative_successful_feature_coverage": (
+                cumulative_cycle_feature or {}
+            ).get("successful_feature_coverage_percent", 0.0),
             "final_grammar": str(config.grammar_file),
             "findings_count": len(list(config.findings_dir.glob("iteration_*"))),
             "config": {
@@ -645,6 +801,7 @@ def main() -> int:
                 "llm_model": config.llm_model,
             },
             "iterations": run_iterations,
+            "cumulative_feature_summary": cumulative_cycle_feature or {},
         }
         report_path = _write_run_report(config, report)
         print(f"[report] Wrote run report to {report_path}")

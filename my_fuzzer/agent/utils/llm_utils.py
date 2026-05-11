@@ -3,6 +3,7 @@ from typing import Any
 from ..models import TestResult
 from ..core.config import FuzzerConfig
 from .coverage_utils import coverage_excerpt
+from .feature_coverage import feature_summary_formatter
 
 def feedback_block_formatter(validation_feedback: str | None) -> str:
     if not validation_feedback:
@@ -80,7 +81,8 @@ def results_formatter(results: list[TestResult] | list[dict[str, Any]]) -> str:
             url = _escape_markdown_cell(item.get("url", ""), 100)
             host = (item.get("headers") or {}).get("Host", "-")
             err = _escape_markdown_cell(item.get("error_message"), 80)
-            lines.append(f"- `{item.get('status_code', '?')}` {url} (Host={host}) {err}")
+            feature_key = item.get("feature_key") or (item.get("ignored_reason") or "-")
+            lines.append(f"- `{item.get('status_code', '?')}` {url} (Host={host}, Feature={feature_key}) {err}")
 
     # Sample unique URL patterns (deduplicated by path prefix)
     seen_prefixes: set[str] = set()
@@ -98,7 +100,8 @@ def results_formatter(results: list[TestResult] | list[dict[str, Any]]) -> str:
     for item in unique_samples[:8]:
         url = _escape_markdown_cell(item.get("url", ""), 80)
         host = (item.get("headers") or {}).get("Host", "-")
-        lines.append(f"- `{item.get('status_code', '?')}` {url} (Host={host})")
+        feature_key = item.get("feature_key") or "-"
+        lines.append(f"- `{item.get('status_code', '?')}` {url} (Host={host}, Feature={feature_key})")
 
     return "\n".join(lines)
 
@@ -150,6 +153,10 @@ def missing_hotspots_formatter(coverage_data: dict[str, Any], config: FuzzerConf
     return "\n".join(lines) if lines else "No significant missing-line hotspots."
 
 
+def feature_coverage_formatter(feature_summary: dict[str, Any]) -> str:
+    return feature_summary_formatter(feature_summary)
+
+
 def iteration_history_formatter(history: list[dict[str, Any]], max_entries: int = 5) -> str:
     """Format recent iteration history for the planner prompt."""
     if not history:
@@ -160,10 +167,15 @@ def iteration_history_formatter(history: list[dict[str, Any]], max_entries: int 
     for entry in recent:
         it = entry.get("iteration", "?")
         cov = entry.get("coverage_percent", "?")
+        feature_cov = entry.get("feature_coverage_percent", "?")
+        cumulative_feature_cov = entry.get("cumulative_feature_coverage_percent", "?")
         decision = entry.get("decision", "?")
         rationale = entry.get("mutation_rationale", "")
         rules = entry.get("proposed_rules", [])
-        line = f"- Iteration {it}: coverage={cov}%, decision={decision}"
+        line = (
+            f"- Iteration {it}: line_coverage={cov}%, feature_coverage={feature_cov}%, "
+            f"cumulative_feature_coverage={cumulative_feature_cov}%, decision={decision}"
+        )
         if rules:
             line += f", rules=[{', '.join(rules)}]"
         if rationale:
