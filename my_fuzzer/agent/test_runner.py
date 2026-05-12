@@ -200,11 +200,14 @@ def run_testing_batch(
 
         print(f"[coverage:{label}] Extracting coverage data.")
         coverage_data = extract_coverage(config)
+        coverage_json_path = config.logs_dir / f"iteration_{iteration:03d}_{label}_coverage.json"
+        write_json(coverage_data, coverage_json_path)
         coverage_digest = coverage_summary(coverage_data, config)
         percent_covered = float(coverage_digest["percent_covered"] or 0.0)
         print(f"[coverage:{label}] {percent_covered:.2f}%")
 
         metadata["coverage"] = coverage_digest
+        metadata["coverage_json"] = str(coverage_json_path)
         return percent_covered, coverage_data, results, metadata
     finally:
         config.grammar_file.write_text(original_grammar, encoding="utf-8")

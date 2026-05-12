@@ -78,8 +78,8 @@ def format_planner_prompt(**kwargs: str) -> str:
 
     Expected kwargs:
         wttr_description, current_grammar, grammar_declaration,
-        protected_rules, protected_rule_context, editable_rules,
-        results_summary, coverage_summary, missing_hotspots,
+        protected_rules, protected_rule_context, editable_rules, codebase_reachability_guide,
+        results_summary, coverage_summary, missing_hotspots, missing_line_context,
         validation_feedback, iteration_history,
         host_profiles, ua_profiles, accept_language_profiles, ip_profiles
     """
@@ -91,7 +91,7 @@ def format_rewriter_prompt(**kwargs: str) -> str:
     """Load and format the rewriter system prompt with runtime variables.
 
     Expected kwargs:
-        wttr_description, current_grammar, planner_output,
+        wttr_description, current_grammar, planner_output, codebase_reachability_guide,
         grammar_declaration, protected_rules, protected_rule_context,
         editable_rules, response_contract
     """

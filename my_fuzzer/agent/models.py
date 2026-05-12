@@ -84,6 +84,7 @@ class PlannerOutput:
     reachable_by_grammar: list[str] = field(default_factory=list)
     reachable_by_headers_only: list[str] = field(default_factory=list)
     unreachable_harness_limits: list[str] = field(default_factory=list)
+    line_target_hints: list[dict[str, str]] = field(default_factory=list)
     recommended_rule_edits: list[dict[str, str]] = field(default_factory=list)
     request_space_recommendations: dict[str, list[str]] = field(default_factory=dict)
 

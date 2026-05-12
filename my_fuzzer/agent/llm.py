@@ -22,10 +22,12 @@ from .prompts.prompt import (
 )
 from .utils.cli_utils import run_command
 from .utils.llm_utils import (
+    codebase_reachability_guide_formatter,
     feedback_block_formatter,
     results_formatter,
     coverage_data_formatter,
     missing_hotspots_formatter,
+    missing_line_context_formatter,
     iteration_history_formatter,
     response_text_formatter,
 )
@@ -59,9 +61,11 @@ def build_planner_prompt(
         protected_rules=", ".join(PROTECTED_RULES),
         protected_rule_context=protected_rule_context(current_grammar),
         editable_rules=", ".join(editable_rule_names(current_grammar)),
+        codebase_reachability_guide=codebase_reachability_guide_formatter(),
         results_summary=results_formatter(results),
         coverage_summary=coverage_data_formatter(coverage_data, config),
         missing_hotspots=missing_hotspots_formatter(coverage_data, config),
+        missing_line_context=missing_line_context_formatter(coverage_data, config),
         validation_feedback=feedback_block_formatter(validation_feedback),
         iteration_history=iteration_history or "No previous iterations.",
         host_profiles=_profile_list_text(profiles["host_profiles"]),
@@ -84,6 +88,7 @@ def build_rewriter_prompt(
         protected_rules=", ".join(PROTECTED_RULES),
         protected_rule_context=protected_rule_context(current_grammar),
         editable_rules=", ".join(editable_rule_names(current_grammar)),
+        codebase_reachability_guide=codebase_reachability_guide_formatter(),
         planner_output=planner_output,
         response_contract=RESPONSE_CONTRACT,
     )

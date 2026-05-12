@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import asdict
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any
 import docker
 import json
 import time
@@ -23,6 +24,24 @@ from .utils.coverage_utils import (
     save_finding,
     save_grammar_snapshot,
     append_iteration_log,
+    load_latest_baseline_snapshot,
+    save_latest_baseline_snapshot,
+)
+from .utils.coverage_diff_utils import (
+    aggregate_coverages,
+    compute_coverage_diff,
+    load_coverage_json,
+    write_aggregate_coverage_report,
+    write_coverage_diff_report,
+)
+from .utils.grammar_diff_utils import (
+    write_grammar_diff_report,
+)
+from .utils.report_utils import (
+    ensure_run_report_dirs,
+    make_run_report_slug,
+    write_markdown,
+    write_unavailable_report,
 )
 from .test_runner import (
     run_testing_batch,
@@ -84,11 +103,245 @@ def _preview_text(text: str | None, limit: int = 240) -> str:
     return single_line[: limit - 3] + "..."
 
 
+def _initialize_run_reporting(config, run_started_at: str) -> None:
+    run_slug = make_run_report_slug(run_started_at)
+    run_paths = ensure_run_report_dirs(config, run_slug)
+    config.run_slug = run_slug
+    config.run_reports_dir = run_paths["run_reports_dir"]
+    config.run_grammar_reports_dir = run_paths["grammar_dir"]
+    config.run_coverage_reports_dir = run_paths["coverage_dir"]
+    config.run_summary_reports_dir = run_paths["summary_dir"]
+
+
+def _baseline_labels(snapshot: dict | None, fallback_grammar_label: str) -> tuple[str, str]:
+    if not snapshot:
+        return "no_previous_baseline", fallback_grammar_label
+
+    metadata = snapshot.get("metadata", {})
+    prior_label = metadata.get("label", "latest_saved_baseline")
+    current_label = fallback_grammar_label
+    return prior_label, current_label
+
+
+def _write_baseline_comparison_reports(
+    config,
+    iteration: int,
+    current_grammar: str,
+    coverage_data: dict,
+    coverage_percent: float,
+) -> dict[str, str]:
+    grammar_report = config.run_grammar_reports_dir / f"iteration_{iteration:03d}_baseline_vs_latest_saved_baseline.md"
+    coverage_report = config.run_coverage_reports_dir / f"iteration_{iteration:03d}_baseline_vs_latest_saved_baseline.md"
+    previous_baseline = load_latest_baseline_snapshot(config)
+    current_label = f"{config.run_slug}_baseline_iteration_{iteration:03d}"
+
+    if previous_baseline is None:
+        grammar_path = write_unavailable_report(
+            grammar_report,
+            "Grammar Diff Report",
+            "No previous saved baseline is available yet.",
+            {"Iteration": iteration, "Current Baseline": current_label},
+        )
+        coverage_path = write_unavailable_report(
+            coverage_report,
+            "Coverage Diff Report",
+            "No previous saved baseline is available yet.",
+            {"Iteration": iteration, "Current Baseline": current_label},
+        )
+        status = "no_previous_baseline"
+        baseline_reference = "none"
+    else:
+        previous_label, current_label = _baseline_labels(previous_baseline, current_label)
+        grammar_path = write_grammar_diff_report(
+            grammar_report,
+            iteration=iteration,
+            from_label=previous_label,
+            to_label=current_label,
+            decision="baseline_comparison",
+            mutation_status="baseline",
+            old_text=previous_baseline["grammar_text"],
+            new_text=current_grammar,
+            metadata={"Baseline Reference": previous_label},
+        )
+        coverage_diff = compute_coverage_diff(
+            previous_baseline["coverage_data"],
+            coverage_data,
+            max_files=config.max_missing_files,
+            max_lines_per_file=config.max_missing_lines_per_file,
+        )
+        coverage_path = write_coverage_diff_report(
+            coverage_report,
+            iteration=iteration,
+            from_label=previous_label,
+            to_label=current_label,
+            diff_data=coverage_diff,
+            metadata={"Baseline Reference": previous_label},
+        )
+        status = "available"
+        baseline_reference = previous_label
+
+    save_latest_baseline_snapshot(
+        config,
+        grammar_text=current_grammar,
+        coverage_data=coverage_data,
+        metadata={
+            "label": current_label,
+            "iteration": iteration,
+            "run_slug": config.run_slug,
+            "coverage_percent": coverage_percent,
+            "saved_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
+        },
+    )
+    return {
+        "baseline_reference": baseline_reference,
+        "baseline_grammar_diff_report": str(grammar_path),
+        "baseline_coverage_diff_report": str(coverage_path),
+        "baseline_coverage_diff_status": status,
+    }
+
+
+def _write_candidate_comparison_reports(
+    config,
+    iteration: int,
+    current_grammar: str,
+    candidate_grammar: str | None,
+    decision: str,
+    mutation_status: str,
+    *,
+    candidate_coverage_data: dict | None,
+    coverage_unavailable_reason: str | None = None,
+    metadata: dict | None = None,
+) -> dict[str, str]:
+    grammar_report = config.run_grammar_reports_dir / f"iteration_{iteration:03d}_current_vs_candidate.md"
+    coverage_report = config.run_coverage_reports_dir / f"iteration_{iteration:03d}_candidate_vs_latest_saved_baseline.md"
+    baseline_label = f"{config.run_slug}_baseline_iteration_{iteration:03d}"
+    candidate_label = f"{config.run_slug}_candidate_iteration_{iteration:03d}"
+    if candidate_grammar is None:
+        grammar_path = write_unavailable_report(
+            grammar_report,
+            "Grammar Diff Report",
+            "Candidate grammar text is not available.",
+            {
+                "Iteration": iteration,
+                "Decision": decision,
+                "Mutation Status": mutation_status,
+            },
+        )
+    else:
+        grammar_path = write_grammar_diff_report(
+            grammar_report,
+            iteration=iteration,
+            from_label=baseline_label,
+            to_label=candidate_label,
+            decision=decision,
+            mutation_status=mutation_status,
+            old_text=current_grammar,
+            new_text=candidate_grammar,
+            metadata=metadata or {},
+        )
+
+    latest_baseline = load_latest_baseline_snapshot(config)
+    if candidate_coverage_data is None:
+        coverage_path = write_unavailable_report(
+            coverage_report,
+            "Coverage Diff Report",
+            coverage_unavailable_reason or "Candidate coverage data is not available.",
+            {
+                "Iteration": iteration,
+                "Decision": decision,
+                "Mutation Status": mutation_status,
+            },
+        )
+        status = "not_available"
+    elif latest_baseline is None:
+        coverage_path = write_unavailable_report(
+            coverage_report,
+            "Coverage Diff Report",
+            "No saved baseline coverage is available for comparison.",
+            {"Iteration": iteration, "Decision": decision},
+        )
+        status = "missing_baseline"
+    else:
+        baseline_label = latest_baseline.get("metadata", {}).get("label", "latest_saved_baseline")
+        coverage_diff = compute_coverage_diff(
+            latest_baseline["coverage_data"],
+            candidate_coverage_data,
+            max_files=config.max_missing_files,
+            max_lines_per_file=config.max_missing_lines_per_file,
+        )
+        coverage_path = write_coverage_diff_report(
+            coverage_report,
+            iteration=iteration,
+            from_label=baseline_label,
+            to_label=candidate_label,
+            diff_data=coverage_diff,
+            metadata={"Baseline Reference": baseline_label},
+        )
+        status = "available"
+
+    return {
+        "candidate_grammar_diff_report": str(grammar_path),
+        "candidate_coverage_diff_report": str(coverage_path),
+        "candidate_coverage_diff_status": status,
+    }
+
+
+def _write_cycle_aggregate_coverage_report(config, iterations: list[dict]) -> dict[str, Any] | None:
+    coverage_items: list[dict[str, Any]] = []
+
+    for item in iterations:
+        iteration = item.get("iteration")
+
+        baseline_coverage_json = item.get("coverage_json")
+        if baseline_coverage_json and Path(baseline_coverage_json).exists():
+            coverage_items.append(
+                {
+                    "label": f"iteration_{iteration:03d}_baseline",
+                    "coverage_data": load_coverage_json(Path(baseline_coverage_json)),
+                }
+            )
+
+        candidate_coverage_json = item.get("candidate_coverage_json")
+        if candidate_coverage_json and Path(candidate_coverage_json).exists():
+            coverage_items.append(
+                {
+                    "label": f"iteration_{iteration:03d}_candidate",
+                    "coverage_data": load_coverage_json(Path(candidate_coverage_json)),
+                }
+            )
+
+    if not coverage_items:
+        return None
+
+    aggregate_data = aggregate_coverages(
+        coverage_items,
+        max_files=config.max_missing_files,
+        max_lines_per_file=config.max_missing_lines_per_file,
+    )
+    aggregate_report_path = config.run_summary_reports_dir / "cycle_aggregate_coverage.md"
+    write_aggregate_coverage_report(
+        aggregate_report_path,
+        aggregate_data=aggregate_data,
+        metadata={"Run Slug": config.run_slug},
+    )
+    return {
+        "aggregate_coverage_report": str(aggregate_report_path),
+        "aggregate_coverage_percent": aggregate_data["totals"]["percent_covered"],
+        "aggregate_covered_lines": aggregate_data["totals"]["covered_lines"],
+        "aggregate_missing_lines": aggregate_data["totals"]["missing_lines"],
+        "aggregate_num_statements": aggregate_data["totals"]["num_statements"],
+        "aggregate_source_count": aggregate_data["source_count"],
+    }
+
+
 def _write_run_report(config, report: dict) -> Path:
     started_at = report["started_at"].replace(":", "").replace("-", "")
     started_at = started_at.replace("T", "_").replace("Z", "")
     report_path = config.logs_dir / f"run_report_{started_at}.md"
     latest_report_path = config.logs_dir / "latest_run_report.md"
+    summary_report_path = None
+    if config.run_summary_reports_dir is not None:
+        summary_report_path = config.run_summary_reports_dir / "run_summary.md"
 
     lines: list[str] = []
     lines.append("# Fuzzer Loop Run Report")
@@ -110,6 +363,14 @@ def _write_run_report(config, report: dict) -> Path:
         ("Base URL", report["config"]["base_url"]),
         ("LLM Model", report["config"]["llm_model"]),
         ("Champion Coverage", f"{report['champion_coverage']:.2f}%"),
+        (
+            "Aggregate Coverage",
+            (
+                f"{report['aggregate_coverage_percent']:.2f}%"
+                if report.get("aggregate_coverage_percent") is not None
+                else "-"
+            ),
+        ),
         ("Final Grammar", report["final_grammar"]),
         ("Findings Count", str(report["findings_count"])),
     ]
@@ -145,6 +406,20 @@ def _write_run_report(config, report: dict) -> Path:
             )
         )
 
+    if report.get("aggregate_coverage_percent") is not None:
+        lines.append("## Aggregate Coverage")
+        lines.append("")
+        lines.append(f"- Coverage across all included iterations: {report['aggregate_coverage_percent']:.2f}%")
+        lines.append(f"- Covered lines: {report['aggregate_covered_lines']}")
+        lines.append(f"- Missing lines: {report['aggregate_missing_lines']}")
+        lines.append(f"- Executable lines: {report['aggregate_num_statements']}")
+        lines.append(f"- Included coverage artifacts: {report['aggregate_source_count']}")
+        if report.get("aggregate_coverage_report"):
+            lines.append(
+                f"- Aggregate report: [{Path(report['aggregate_coverage_report']).name}]({report['aggregate_coverage_report']})"
+            )
+        lines.append("")
+
     lines.append("")
     lines.append("## Iteration Details")
     lines.append("")
@@ -173,11 +448,37 @@ def _write_run_report(config, report: dict) -> Path:
             lines.append(f"- Reachable by grammar: {len(reach.get('grammar', []))} items")
             lines.append(f"- Reachable by headers only: {len(reach.get('headers', []))} items")
             lines.append(f"- Unreachable (harness): {len(reach.get('harness', []))} items")
+        if item.get("line_target_hints"):
+            lines.append(f"- Line target hints: {len(item['line_target_hints'])} items")
         if item.get("results_json"):
             lines.append(f"- Baseline results: [{Path(item['results_json']).name}]({item['results_json']})")
+        if item.get("coverage_json"):
+            lines.append(f"- Baseline coverage JSON: [{Path(item['coverage_json']).name}]({item['coverage_json']})")
         if item.get("candidate_results_json"):
             lines.append(
                 f"- Candidate results: [{Path(item['candidate_results_json']).name}]({item['candidate_results_json']})"
+            )
+        if item.get("candidate_coverage_json"):
+            lines.append(
+                f"- Candidate coverage JSON: [{Path(item['candidate_coverage_json']).name}]({item['candidate_coverage_json']})"
+            )
+        if item.get("baseline_grammar_diff_report"):
+            lines.append(
+                f"- Baseline grammar diff: [{Path(item['baseline_grammar_diff_report']).name}]({item['baseline_grammar_diff_report']})"
+            )
+        if item.get("baseline_coverage_diff_report"):
+            lines.append(
+                f"- Baseline coverage diff ({item.get('baseline_coverage_diff_status', 'unknown')}): "
+                f"[{Path(item['baseline_coverage_diff_report']).name}]({item['baseline_coverage_diff_report']})"
+            )
+        if item.get("candidate_grammar_diff_report"):
+            lines.append(
+                f"- Candidate grammar diff: [{Path(item['candidate_grammar_diff_report']).name}]({item['candidate_grammar_diff_report']})"
+            )
+        if item.get("candidate_coverage_diff_report"):
+            lines.append(
+                f"- Candidate coverage diff ({item.get('candidate_coverage_diff_status', 'unknown')}): "
+                f"[{Path(item['candidate_coverage_diff_report']).name}]({item['candidate_coverage_diff_report']})"
             )
         if item.get("artifact_files"):
             artifact_names = ", ".join(Path(p).name for p in item["artifact_files"].values())
@@ -190,11 +491,20 @@ def _write_run_report(config, report: dict) -> Path:
     lines.append(f"- Logs directory: [{config.logs_dir.name}]({config.logs_dir})")
     lines.append(f"- Findings directory: [{config.findings_dir.name}]({config.findings_dir})")
     lines.append(f"- History directory: [{config.history_dir.name}]({config.history_dir})")
+    if config.run_reports_dir is not None:
+        lines.append(f"- Run reports directory: [{config.run_reports_dir.name}]({config.run_reports_dir})")
+    if report.get("aggregate_coverage_report"):
+        lines.append(
+            f"- Aggregate coverage report: "
+            f"[{Path(report['aggregate_coverage_report']).name}]({report['aggregate_coverage_report']})"
+        )
     lines.append("")
 
     content = "\n".join(lines)
     report_path.write_text(content, encoding="utf-8")
     latest_report_path.write_text(content, encoding="utf-8")
+    if summary_report_path is not None:
+        write_markdown(summary_report_path, lines)
     return report_path
 
 
@@ -218,6 +528,7 @@ def _mutate_grammar(
     attempt_traces: list[dict] = []
     planner_analysis = ""
     reachability: dict[str, list[str]] = {}
+    line_target_hints: list[dict[str, str]] = []
     request_profiles: dict[str, list[str]] | None = None
 
     for attempt in range(1, config.llm_attempts + 1):
@@ -250,7 +561,9 @@ def _mutate_grammar(
                     "headers": planner_parsed.reachable_by_headers_only,
                     "harness": planner_parsed.unreachable_harness_limits,
                 }
+                line_target_hints = planner_parsed.line_target_hints
                 request_profiles = planner_parsed.request_space_recommendations
+                attempt_trace["line_target_hints"] = line_target_hints
                 attempt_trace["planner_parsed"] = True
             except ValueError as exc:
                 attempt_trace["planner_parse_warning"] = str(exc)
@@ -332,6 +645,7 @@ def _mutate_grammar(
                 "attempt_traces": attempt_traces,
                 "planner_analysis": planner_analysis,
                 "reachability": reachability,
+                "line_target_hints": line_target_hints,
                 "request_profiles": request_profiles,
             }
 
@@ -354,6 +668,7 @@ def _mutate_grammar(
         "attempt_traces": attempt_traces,
         "planner_analysis": planner_analysis,
         "reachability": reachability,
+        "line_target_hints": line_target_hints,
         "request_profiles": request_profiles,
     }
 
@@ -367,6 +682,8 @@ def main() -> int:
         config.history_dir,
         config.logs_dir,
         config.generator_dir,
+        config.reports_dir,
+        config.baselines_dir,
     )
 
     client = docker.from_env()
@@ -378,6 +695,7 @@ def main() -> int:
     normal_exit_codes = {0, 130, 143, None}
     run_started_ts = time.time()
     run_started_at = datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    _initialize_run_reporting(config, run_started_at)
     run_iterations: list[dict] = []
     run_status = "completed"
     run_error: str | None = None
@@ -408,6 +726,7 @@ def main() -> int:
                 )
             except Exception as exc:
                 iteration_record["decision"] = "execution_error"
+                append_iteration_log(config, iteration_record)
                 run_iterations.append(iteration_record)
                 save_finding(
                     config,
@@ -421,11 +740,14 @@ def main() -> int:
 
             iteration_record["tests_run"] = baseline_meta["tests_run"]
             iteration_record["results_json"] = baseline_meta["results_json"]
+            iteration_record["coverage_json"] = baseline_meta.get("coverage_json")
             iteration_record["http_counts"] = baseline_meta["http"].get("counts", {})
             iteration_record["container_exit_code"] = baseline_meta["container_exit_code"]
+            iteration_record["comparison_mode"] = "latest_saved_baseline"
 
             if baseline_meta["execution_error"]:
                 iteration_record["decision"] = "execution_error"
+                append_iteration_log(config, iteration_record)
                 run_iterations.append(iteration_record)
                 save_finding(
                     config,
@@ -465,17 +787,16 @@ def main() -> int:
                 )
 
             coverage_digest = baseline_meta["coverage"]
+            iteration_record["coverage"] = coverage_digest
             iteration_record["coverage_percent"] = percent_covered
-
-            iteration_summary = {
-                "iteration": iteration,
-                "coverage": coverage_digest,
-                "http": baseline_meta["http"],
-                "container_exit_code": exit_code,
-                "coverage_json": str(config.coverage_json),
-                "results_json": baseline_meta["results_json"],
-            }
-            append_iteration_log(config, iteration_summary)
+            baseline_report_info = _write_baseline_comparison_reports(
+                config,
+                iteration,
+                current_grammar,
+                coverage_data,
+                percent_covered,
+            )
+            iteration_record.update(baseline_report_info)
             print(f"[coverage] {percent_covered:.2f}%")
 
             if percent_covered > best_coverage:
@@ -487,6 +808,7 @@ def main() -> int:
                 iteration_record["mutation_status"] = "skipped_final_iteration"
                 iteration_record["decision"] = "kept_champion"
                 iteration_record["llm_attempts"] = 0
+                append_iteration_log(config, iteration_record)
                 run_iterations.append(iteration_record)
                 print("[llm] Skipping mutation on the final iteration because there is no subsequent run to use a new grammar.")
                 continue
@@ -508,6 +830,7 @@ def main() -> int:
             iteration_record["mutation_rationale"] = mutation_meta.get("rationale")
             iteration_record["planner_analysis"] = mutation_meta.get("planner_analysis")
             iteration_record["reachability"] = mutation_meta.get("reachability")
+            iteration_record["line_target_hints"] = mutation_meta.get("line_target_hints")
             if attempt_traces:
                 last_parsed_plan = attempt_traces[-1].get("parsed_plan", {})
                 iteration_record["proposed_rules"] = [
@@ -519,6 +842,23 @@ def main() -> int:
             if candidate_grammar is None:
                 iteration_record["mutation_status"] = "rejected"
                 iteration_record["decision"] = "kept_current_grammar"
+                iteration_record.update(
+                    _write_candidate_comparison_reports(
+                        config,
+                        iteration,
+                        current_grammar,
+                        mutation_meta.get("candidate_grammar"),
+                        decision=iteration_record["decision"],
+                        mutation_status=iteration_record["mutation_status"],
+                        candidate_coverage_data=None,
+                        coverage_unavailable_reason="Candidate grammar was rejected during validation and was not executed.",
+                        metadata={
+                            "Validation Output": _preview_text(iteration_record.get("validation_output"), 200),
+                            "Proposed Rules": iteration_record.get("proposed_rules", []),
+                        },
+                    )
+                )
+                append_iteration_log(config, iteration_record)
                 run_iterations.append(iteration_record)
                 save_finding(
                     config,
@@ -533,7 +873,7 @@ def main() -> int:
 
             print("[llm] Evaluating candidate grammar against the current champion.")
             try:
-                candidate_percent, _, _, candidate_meta = run_testing_batch(
+                candidate_percent, candidate_coverage_data, _, candidate_meta = run_testing_batch(
                     config,
                     client,
                     iteration,
@@ -544,6 +884,20 @@ def main() -> int:
             except Exception as exc:
                 iteration_record["mutation_status"] = "candidate_execution_error"
                 iteration_record["decision"] = "kept_champion"
+                iteration_record.update(
+                    _write_candidate_comparison_reports(
+                        config,
+                        iteration,
+                        current_grammar,
+                        candidate_grammar,
+                        decision=iteration_record["decision"],
+                        mutation_status=iteration_record["mutation_status"],
+                        candidate_coverage_data=None,
+                        coverage_unavailable_reason=f"Candidate execution failed before coverage collection: {exc}",
+                        metadata={"Proposed Rules": iteration_record.get("proposed_rules", [])},
+                    )
+                )
+                append_iteration_log(config, iteration_record)
                 run_iterations.append(iteration_record)
                 save_finding(
                     config,
@@ -565,6 +919,24 @@ def main() -> int:
             if candidate_meta["execution_error"]:
                 iteration_record["mutation_status"] = "candidate_execution_error"
                 iteration_record["decision"] = "kept_champion"
+                iteration_record["candidate_results_json"] = candidate_meta.get("results_json")
+                iteration_record.update(
+                    _write_candidate_comparison_reports(
+                        config,
+                        iteration,
+                        current_grammar,
+                        candidate_grammar,
+                        decision=iteration_record["decision"],
+                        mutation_status=iteration_record["mutation_status"],
+                        candidate_coverage_data=None,
+                        coverage_unavailable_reason=(
+                            "Candidate execution ended before coverage collection: "
+                            f"{candidate_meta['execution_error']}"
+                        ),
+                        metadata={"Proposed Rules": iteration_record.get("proposed_rules", [])},
+                    )
+                )
+                append_iteration_log(config, iteration_record)
                 run_iterations.append(iteration_record)
                 save_finding(
                     config,
@@ -588,6 +960,7 @@ def main() -> int:
             iteration_record["candidate_coverage_percent"] = candidate_percent
             iteration_record["coverage_delta"] = improvement
             iteration_record["candidate_results_json"] = candidate_meta.get("results_json")
+            iteration_record["candidate_coverage_json"] = candidate_meta.get("coverage_json")
             if candidate_percent >= best_coverage:
                 best_coverage = candidate_percent
                 best_grammar_text = candidate_grammar
@@ -596,6 +969,19 @@ def main() -> int:
                 save_grammar_snapshot(config, iteration, "best", candidate_grammar)
                 iteration_record["mutation_status"] = "accepted"
                 iteration_record["decision"] = "promoted_to_champion"
+                iteration_record.update(
+                    _write_candidate_comparison_reports(
+                        config,
+                        iteration,
+                        current_grammar,
+                        candidate_grammar,
+                        decision=iteration_record["decision"],
+                        mutation_status=iteration_record["mutation_status"],
+                        candidate_coverage_data=candidate_coverage_data,
+                        metadata={"Proposed Rules": iteration_record.get("proposed_rules", [])},
+                    )
+                )
+                append_iteration_log(config, iteration_record)
                 run_iterations.append(iteration_record)
                 print(f"[llm] Accepted candidate grammar at {candidate_percent:.2f}% (delta {improvement:+.2f}).")
                 continue
@@ -603,6 +989,19 @@ def main() -> int:
             config.grammar_file.write_text(best_grammar_text, encoding="utf-8")
             iteration_record["mutation_status"] = "regression"
             iteration_record["decision"] = "kept_champion"
+            iteration_record.update(
+                _write_candidate_comparison_reports(
+                    config,
+                    iteration,
+                    current_grammar,
+                    candidate_grammar,
+                    decision=iteration_record["decision"],
+                    mutation_status=iteration_record["mutation_status"],
+                    candidate_coverage_data=candidate_coverage_data,
+                    metadata={"Proposed Rules": iteration_record.get("proposed_rules", [])},
+                )
+            )
+            append_iteration_log(config, iteration_record)
             run_iterations.append(iteration_record)
             save_finding(
                 config,
@@ -626,6 +1025,7 @@ def main() -> int:
         run_error = str(exc)
         raise
     finally:
+        aggregate_report_info = _write_cycle_aggregate_coverage_report(config, run_iterations)
         report = {
             "status": run_status,
             "error": run_error,
@@ -646,6 +1046,8 @@ def main() -> int:
             },
             "iterations": run_iterations,
         }
+        if aggregate_report_info:
+            report.update(aggregate_report_info)
         report_path = _write_run_report(config, report)
         print(f"[report] Wrote run report to {report_path}")
 

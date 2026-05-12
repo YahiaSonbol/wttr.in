@@ -245,6 +245,7 @@ def parse_planner_output(raw_text: str) -> PlannerOutput:
         reachable_by_grammar=_list_of_str("reachable_by_grammar"),
         reachable_by_headers_only=_list_of_str("reachable_by_headers_only"),
         unreachable_harness_limits=_list_of_str("unreachable_harness_limits"),
+        line_target_hints=_list_of_dicts("line_target_hints"),
         recommended_rule_edits=_list_of_dicts("recommended_rule_edits"),
         request_space_recommendations={
             k: [str(v) for v in vs] if isinstance(vs, list) else []

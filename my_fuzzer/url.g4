@@ -5,53 +5,64 @@ url
     ;
 
 uri
-    : protocol '://' host ':' port '/' query
+    : BaseUrl '/' query
+    // colon‑prefixed multi‑location API routes with optional period query
+    | BaseUrl '/' ('weather' | 'forecast' | 'location') ':' CITY ( ':' CITY )* ('?' 'period' '=' DIGITS)?
+    // special routes with /: prefix
+    | BaseUrl '/' ':' ('help' | 'translation' | 'bash.function' | 'iterm2' | 'health' | 'metrics' | 'config' | 'source') ('?' search)?
     ;
 
-protocol
-    : PROTOCOL
+BaseUrl
+    : 'wttr.in'
     ;
 
-host
-    : HOSTNAME
-    ;
+// protocol
+//     : PROTOCOL
+//     ;
 
-port
-    : PORTS
-    ;
+// host
+//     : HOSTNAME
+//     ;
+
+// port
+//     : PORTS
+//     ;
 
 query
     : search
     | CITY
     | 'moon'
     | 'moon' '@' CITY
+    | 'moon' '@' STRING
     | '?' 'format' '=' ('j1' | 'j2' | 'v2' | 'v2n' | 'v2d' | 'p1' | 'png')
-    | '/' ':' ('help' | 'translation' | 'bash.function' | 'iterm2' | 'health' | 'metrics' | 'config' | 'source')
-    // expose special routes without leading slash
-    | ':' ('help' | 'translation' | 'bash.function' | 'iterm2' | 'health' | 'metrics' | 'config' | 'source')
+    | '/' ':' ('help' | 'translation' | 'bash.function' | 'iterm2' | 'health' | 'metrics' | 'config' | 'source') ('?' search)?
+    | ':' ('help' | 'translation' | 'bash.function' | 'iterm2' | 'health' | 'metrics' | 'config' | 'source') ('?' search)?
     | CITY '.png'
     | 'moon' '.png'
     | 'moon' '@' CITY '.png'
+    | 'moon' '@' STRING '.png'
     | '?' 'format' '=' 'png'
     | 'moon' '?' 'format' '=' ('j1' | 'j2' | 'v2' | 'v2n' | 'v2d' | 'p1' | 'png')
     | 'moon' '@' CITY '?' 'format' '=' ('j1' | 'j2' | 'v2' | 'v2n' | 'v2d' | 'p1' | 'png')
-    | 'moon' '?' 'lang' '=' ('en' | 'ru' | 'de' | 'es' | 'fr' | 'ja' | 'zh' | 'ko' | 'ar' | 'th' | 'tr' | 'hi')
-    | 'moon' '@' CITY '?' 'lang' '=' ('en' | 'ru' | 'de' | 'es' | 'fr' | 'ja' | 'zh' | 'ko' | 'ar' | 'th' | 'tr' | 'hi')
-    | 'moon' '?' 'lang' '=' ('en' | 'ru' | 'de' | 'es' | 'fr' | 'ja' | 'zh' | 'ko' | 'ar' | 'th' | 'tr' | 'hi') '&' 'format' '=' ('j1' | 'j2' | 'v2' | 'v2n' | 'v2d' | 'p1' | 'png')
-    | 'moon' '@' CITY '?' 'lang' '=' ('en' | 'ru' | 'de' | 'es' | 'fr' | 'ja' | 'zh' | 'ko' | 'ar' | 'th' | 'tr' | 'hi') '&' 'format' '=' ('j1' | 'j2' | 'v2' | 'v2n' | 'v2d' | 'p1' | 'png')
-    | CITY '?' search
-    | CITY '.png' '?' search
-    | 'moon' '@' CITY '?' search
-    | 'moon' '?' 'lang' '=' STRING '&' 'format' '=' STRING
-    | 'moon' '@' CITY '?' 'lang' '=' STRING '&' 'format' '=' STRING
-    | CITY '_200x_lang=' STRING '.png'
-    | 'moon' '@' CITY '_200x_lang=' STRING '.png'
-    | CITY '_200x_lang=' STRING '?' search
-    | 'moon' '@' CITY '?' searchparameter ('&' searchparameter)*
-    // prefixed API style routes
-    | 'weather' ':' CITY
-    | 'forecast' ':' CITY
-    | 'location' ':' CITY
+    | 'moon' '@' STRING '?' 'format' '=' ('j1' | 'j2' | 'v2' | 'v2n' | 'v2d' | 'p1' | 'png')
+    // PNG routes with proper dimensions
+    | CITY '_' DIGITS 'x' DIGITS '.png'
+    | CITY '_' DIGITS 'x' '.png'
+    | CITY '_' 'x' DIGITS '.png'
+    // extended PNG routes with variable size and language suffixes
+    | CITY '_' DIGITS 'x' '_' LANG_SUFFIX ( '&' searchparameter )? '.png'
+    | 'moon' '_' DIGITS 'x' '_' LANG_SUFFIX ( '&' searchparameter )? '.png'
+    // colon‑prefixed API routes with optional full query strings
+    | 'weather:' CITY ('?' search)?
+    | 'forecast:' CITY ('?' search)?
+    | 'location:' CITY ('?' search)?
+    // use_imperial parameter
+    | 'use_imperial' '=' ('true' | '1')
+    ;
+
+// helper token for language suffix used in PNG routes
+LANG_SUFFIX
+    : 'lang=' STRING
     ;
 
 search
@@ -62,12 +73,22 @@ searchparameter
     : string ('=' (string | DIGITS | HEX | QUOTED_STRING))?
     | 'format' '=' ('j1' | 'j2' | 'v2' | 'v2n' | 'v2d' | 'p1' | 'png')
     | 'lang'   '=' ('en' | 'ru' | 'de' | 'es' | 'fr' | 'ja' | 'zh' | 'ko' | 'ar' | 'th' | 'tr' | 'hi')
-    | 'A' | 'd' | 'n' | 'm' | 'M' | 'u' | 'I' | 't' | 'T' | 'p' | 'q' | 'Q' | 'F' | '0' | '1' | '2' | '3'
+    // dedicated flag‑only bundle (e.g., FqT, AmdnF0)
+    | FLAG_BUNDLE
+    // key=value pairs with flag bundles as value
+    | string '=' FLAG_BUNDLE
     | 'lang' '=' STRING
     | 'format' '=' STRING
     | 'location' '=' STRING
     | 'city' '=' STRING
     | 'city' '=' ('en' | 'ru' | 'de' | 'es' | 'fr' | 'ja' | 'zh' | 'ko' | 'ar' | 'th' | 'tr' | 'hi')
+    // use_imperial and narrow boolean parameters
+    | 'use_imperial' '=' ('true' | '1')
+    | 'narrow' '=' ('1' | 'true')
+    ;
+
+FLAG_BUNDLE
+    : ('A'|'d'|'n'|'m'|'M'|'u'|'I'|'t'|'T'|'p'|'q'|'Q'|'F'|'0'|'1'|'2'|'3')+
     ;
 
 QUOTED_STRING
@@ -106,6 +127,26 @@ PORTS
 
 CITY
     : 'cairo' | 'paris' | 'london' | 'newyork' | 'tokyo' | 'moscow' | 'beijing' | 'delhi' | 'sydney' | 'rome' | 'berlin' | 'madrid' | 'toronto' | 'dubai' | 'singapore' | 'hongkong' | 'seoul' | 'bangkok' | 'istanbul' | 'riyadh' | 'moon'
-    // generic city, optional size (e.g., city_200x) and mandatory language code suffix for PNG paths
-    | [a-zA-Z]+ ('_' [0-9]+ 'x')? '_lang=' STRING
+    // generic city with optional size, language suffix and trailing underscores
+    | [a-zA-Z]+ ('_' DIGITS 'x')? ('_'? 'lang=' (STRING | HEX))? ('_'*)?
+    // percent‑encoded city names
+    | (HEX)+
+    // IPv4 address handling
+    | IP_ADDR
+    // tilde‑prefixed home location
+    | TILDE_CITY
+    // serialized payload locations prefixed with 'b_'
+    | SERIAL_PAYLOAD
+    ;
+
+IP_ADDR
+    : DIGITS '.' DIGITS '.' DIGITS '.' DIGITS
+    ;
+
+TILDE_CITY
+    : '~' CITY
+    ;
+
+SERIAL_PAYLOAD
+    : 'b_' (HEX | STRING)+
     ;

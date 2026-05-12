@@ -24,6 +24,13 @@ class FuzzerConfig:
     findings_dir: Path
     history_dir: Path
     logs_dir: Path
+    reports_dir: Path
+    baselines_dir: Path
+
+    ## == Baseline Snapshot Files ==
+    latest_baseline_grammar: Path
+    latest_baseline_coverage_json: Path
+    latest_baseline_metadata: Path
 
     # == Target Settings ==
     image: str
@@ -49,6 +56,12 @@ class FuzzerConfig:
 
     max_missing_files: int
     max_missing_lines_per_file: int
+
+    run_reports_dir: Path | None = None
+    run_grammar_reports_dir: Path | None = None
+    run_coverage_reports_dir: Path | None = None
+    run_summary_reports_dir: Path | None = None
+    run_slug: str | None = None
 
     @property
     def base_url(self) -> str:
@@ -80,7 +93,12 @@ def make_config(args: argparse.Namespace) -> FuzzerConfig:
         findings_dir=fuzzer_dir / "findings",
         history_dir=fuzzer_dir / "history",
         logs_dir=fuzzer_dir / "logs",
-        
+        reports_dir=fuzzer_dir / "reports",
+        baselines_dir=fuzzer_dir / "baselines",
+        latest_baseline_grammar=fuzzer_dir / "baselines" / "latest_baseline_grammar.g4",
+        latest_baseline_coverage_json=fuzzer_dir / "baselines" / "latest_baseline_coverage.json",
+        latest_baseline_metadata=fuzzer_dir / "baselines" / "latest_baseline_metadata.json",
+
         image=args.image,
         host_port=args.host_port,
         container_port=args.container_port,
@@ -109,7 +127,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="LLM-guided autonomous grammar fuzzer")
     parser.add_argument("--env-file", default=None)
     parser.add_argument("--iterations", type=int, default=10)
-    parser.add_argument("--cases", type=int, default=50)
+    parser.add_argument("--cases", type=int, default=400)
     parser.add_argument("--depth", type=int, default=20)
     parser.add_argument("--image", default="wttr:latest")
     parser.add_argument("--host-port", type=int, default=8002)

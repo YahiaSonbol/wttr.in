@@ -158,3 +158,31 @@ def save_grammar_snapshot(config: FuzzerConfig, iteration: int, suffix: str, gra
 def append_iteration_log(config: FuzzerConfig, summary: dict[str, Any]) -> None:
     with config.iteration_log.open("a", encoding="utf-8") as handle:
         handle.write(json.dumps(summary) + "\n")
+
+
+def save_latest_baseline_snapshot(
+    config: FuzzerConfig,
+    *,
+    grammar_text: str,
+    coverage_data: dict[str, Any],
+    metadata: dict[str, Any],
+) -> None:
+    ensure_dirs(config.baselines_dir)
+    config.latest_baseline_grammar.write_text(grammar_text, encoding="utf-8")
+    write_json(coverage_data, config.latest_baseline_coverage_json)
+    write_json(metadata, config.latest_baseline_metadata)
+
+
+def load_latest_baseline_snapshot(config: FuzzerConfig) -> dict[str, Any] | None:
+    if not (
+        config.latest_baseline_grammar.exists()
+        and config.latest_baseline_coverage_json.exists()
+        and config.latest_baseline_metadata.exists()
+    ):
+        return None
+
+    return {
+        "grammar_text": config.latest_baseline_grammar.read_text(encoding="utf-8"),
+        "coverage_data": json.loads(config.latest_baseline_coverage_json.read_text(encoding="utf-8")),
+        "metadata": json.loads(config.latest_baseline_metadata.read_text(encoding="utf-8")),
+    }
